@@ -6,8 +6,11 @@
     openai: { link: 'https://platform.openai.com/api-keys', name: 'OpenAI', description: 'GPT-4o Search adapter. Paid API usage, separate from ChatGPT subscriptions. Experimental: not live-tested in this release.' },
     perplexity: { link: 'https://www.perplexity.ai/settings/api', name: 'Perplexity', description: 'Sonar search adapter. Uses your own API credits. Experimental: not live-tested in this release.' }
   };
-  let saved = { provider: 'gemini', configured: {} };
+  let saved = { provider: 'tavily', configured: {} }, researching = false;
   if (new URLSearchParams(location.search).get('view') === 'full') document.body.classList.add('full-page');
+  const params=new URLSearchParams(location.search);
+  $('profile-url').value=params.get('profile') || '';
+  $('creator-name').value=(params.get('name') || '').slice(0,160);
   async function send(message) {
     const response = await chrome.runtime.sendMessage(message);
     if (!response?.success) throw new Error(response?.error || 'Extension unavailable. Reload it and try again.');
@@ -26,6 +29,34 @@
     $('status').textContent = ready ? 'Ready' : 'Key needed'; $('status').classList.toggle('ready', Boolean(ready));
   }
   async function stats() { const res = await send({ action: 'getCacheStats' }); $('checks').textContent = res.totalVerifications; $('cached').textContent = res.cachedCreators; }
+  function showReport(response) {
+    $('result').hidden=false;
+    const root=$('result').shadowRoot || $('result').attachShadow({mode:'open'});
+    globalThis.ExpertSealReport.render(root,response);
+    $('progress').textContent=response.cached ? 'Opened a saved report. No API credits used.' : response.data?.partial ? 'Some searches failed. Review section errors; this partial report was not cached.' : 'Research complete. Review the sources and identity matches.';
+  }
+  async function history() {
+    const res=await send({action:'getHistory'});$('history').replaceChildren();
+    if (!res.reports?.length) {$('history').textContent='No saved reports yet.';return;}
+    for (const report of res.reports) {
+      const row=document.createElement('div');row.className='history-row';
+      const open=document.createElement('button');open.type='button';open.className='history-open';
+      open.textContent=`${report.creator.displayName || report.creator.username} · ${report.provider} · ${new Date(report.timestamp).toLocaleDateString()}`;
+      open.addEventListener('click',async()=>{
+        if (researching) {notice('Wait for the current research to finish.');return;}
+        try {
+          const result=await send({action:'getReport',id:report.id});showReport(result);
+          $('profile-url').value=result.creator.profileUrl;$('creator-name').value=result.creator.displayName || '';
+          $('creator-context').value=result.creator.context || '';$('linkedin-url').value=result.creator.linkedinUrl || '';
+          notice('Saved report opened; your selected provider is unchanged.');
+        } catch(e) {notice(e.message,true);}
+      });
+      const remove=document.createElement('button');remove.type='button';remove.textContent='Delete';remove.setAttribute('aria-label',`Delete report for ${report.creator.username}`);
+      remove.addEventListener('click',async()=>{try {await send({action:'deleteReport',id:report.id});$('result').hidden=true;await history();await stats();notice('Report deleted.');} catch(e){notice(e.message,true);}});
+      row.append(open,remove);$('history').append(row);
+    }
+  }
+  $('reload-history').addEventListener('click',()=>history().catch(e=>notice(e.message,true)));
   $('provider').addEventListener('change', () => { $('api-key').value = ''; update(); });
   $('save').addEventListener('click', async () => {
     $('save').disabled = true;
@@ -42,23 +73,20 @@
   $('verify').addEventListener('click', async () => {
     let creator;
     try {
-      creator = globalThis.ExpertSealIdentity.normalizeCreator({ profileUrl: $('profile-url').value.trim(), displayName: $('creator-name').value.trim() });
+      creator = globalThis.ExpertSealIdentity.normalizeCreator({ profileUrl: $('profile-url').value.trim(), displayName: $('creator-name').value.trim(), context:$('creator-context').value,linkedinUrl:$('linkedin-url').value.trim() });
       if ($('api-key').value.trim() || $('provider').value !== saved.provider) throw new Error('Save your provider settings first.');
     } catch (e) { notice(e.message, true); return; }
-    $('verify').disabled = true; $('progress').textContent = 'Researching public sources… this may take up to a minute. Keep this page open.';
+    researching=true;$('verify').disabled = true; $('progress').textContent = 'Researching public sources… this may take up to a minute. Keep this page open.';
     $('result').hidden = true; notice('');
     try {
       const response = await send({ action: 'verify', creator });
-      $('result').hidden = false;
-      const root = $('result').shadowRoot || $('result').attachShadow({ mode: 'open' });
-      globalThis.ExpertSealReport.render(root, response);
-      $('progress').textContent = response.cached ? 'Loaded a saved report. Clear reports to run a fresh check.' : 'Research complete. Review the sources and limitations below.';
-      await stats();
+      showReport(response);
+      await stats();await history();
     } catch (e) { $('progress').textContent = ''; notice(e.message, true); }
-    finally { $('verify').disabled = false; }
+    finally { researching=false;$('verify').disabled = false; }
   });
-  $('clear-cache').addEventListener('click', async () => { try { await send({ action: 'clearCache' }); await stats(); $('result').hidden = true; notice('Saved reports cleared. Your keys are unchanged.'); } catch (e) { notice(e.message, true); } });
+  $('clear-cache').addEventListener('click', async () => { try { await send({ action: 'clearCache' }); await stats();await history(); $('result').hidden = true; notice('Saved reports cleared. Your keys are unchanged.'); } catch (e) { notice(e.message, true); } });
   $('open-tab').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html') + '?view=full' }));
-  (async () => { try { saved = (await send({ action: 'getSettings' })).settings; $('provider').value = saved.provider; update(); await stats(); }
+  (async () => { try { saved = (await send({ action: 'getSettings' })).settings; $('provider').value = saved.provider; update(); await stats();await history(); }
     catch (e) { $('status').textContent = 'Unavailable'; notice(e.message, true); } })();
 })();

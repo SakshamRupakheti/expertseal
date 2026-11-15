@@ -12,7 +12,7 @@ const ready = (async () => {
   const local = await chrome.storage.local.get(['settingsV2']);
   if (!local.settingsV2) {
     const old = await chrome.storage.sync.get(['provider', ...KEY_FIELDS]);
-    const provider = PROVIDERS.includes(old.provider) ? old.provider : 'gemini';
+    const provider = PROVIDERS.includes(old.provider) ? old.provider : 'tavily';
     const keys = Object.fromEntries(PROVIDERS.map(p => [p, old[`${p}ApiKey`] || old.apiKeys?.[p] || (provider === p ? old.apiKey : '') || '']));
     await chrome.storage.local.set({ settingsV2: { provider, keys }, totalVerifications: 0 });
   }
@@ -36,7 +36,7 @@ function isSocialPage(sender) {
 }
 function cacheKey(creator, provider) {
   const identity = creator.profileUrl.includes('/channel/') ? creator.profileUrl : creator.profileUrl.toLowerCase();
-  return `es_v${CACHE_VERSION}_${provider}_${identity}`;
+  return `es_v${CACHE_VERSION}_${provider}_${identity}|${encodeURIComponent(JSON.stringify([creator.displayName,creator.context,creator.linkedinUrl,creator.bio]))}`;
 }
 async function verify(input, refresh = false) {
   const creator = normalizeCreator(input);
@@ -56,8 +56,14 @@ async function verify(input, refresh = false) {
   const task = (async () => {
     const data = await research(provider, key, creator);
     const result = { data, creator, provider, timestamp: Date.now(), version: CACHE_VERSION, cached: false };
-    if (epoch === cacheEpoch && !data.partial) await chrome.storage.local.set({ [id]: result });
     const countWrite = settingsQueue.then(async () => {
+      if (epoch === cacheEpoch && !data.partial) {
+        await chrome.storage.local.set({ [id]: result });
+        const all = await chrome.storage.local.get(null);
+        const reports = Object.entries(all).filter(([k,v])=>k.startsWith('es_v') && Number.isFinite(v?.timestamp)).sort((a,b)=>b[1].timestamp-a[1].timestamp);
+        const stale = reports.filter(([k,v],index)=>index>=50 || Date.now()-v.timestamp>=CACHE_TTL || v.version!==CACHE_VERSION).map(([k])=>k);
+        if (stale.length) await chrome.storage.local.remove(stale);
+      }
       const { totalVerifications = 0 } = await chrome.storage.local.get('totalVerifications');
       await chrome.storage.local.set({ totalVerifications: totalVerifications + 1 });
     });
@@ -74,7 +80,15 @@ export async function dispatch(message, sender) {
   const own = isSettingsPage(sender);
   const social = isSocialPage(sender);
   if (!own && !social) throw new Error('This page cannot use ExpertSeal.');
-  if (message.action === 'openSettings') { await chrome.runtime.openOptionsPage(); return {}; }
+  if (message.action === 'openSettings') {
+    if (message.creator) {
+      const creator = normalizeCreator(message.creator);
+      if (social && creator.platform !== platformForHost(new URL(sender.url).hostname)) throw new Error('Creator platform does not match this page.');
+      const params = new URLSearchParams({view:'full',profile:creator.profileUrl,name:creator.displayName});
+      await chrome.tabs.create({url:chrome.runtime.getURL('popup/popup.html')+'?'+params});
+    } else await chrome.runtime.openOptionsPage();
+    return {};
+  }
   if (message.action === 'verify') {
     const creator = normalizeCreator(message.creator);
     if (social && creator.platform !== platformForHost(new URL(sender.url).hostname)) throw new Error('Creator platform does not match this page.');
@@ -82,6 +96,19 @@ export async function dispatch(message, sender) {
   }
   if (!own) throw new Error('Open the extension settings to perform this action.');
   if (message.action === 'getSettings') return { settings: await publicSettings() };
+  if (message.action === 'getHistory') {
+    const all=await chrome.storage.local.get(null);
+    return {reports:Object.entries(all).filter(([id,r])=>id.startsWith(`es_v${CACHE_VERSION}_`) && r?.version===CACHE_VERSION && Date.now()-r.timestamp>=0 && Date.now()-r.timestamp<CACHE_TTL)
+      .sort((a,b)=>b[1].timestamp-a[1].timestamp).slice(0,50).map(([id,r])=>({id,creator:r.creator,provider:r.provider,timestamp:r.timestamp}))};
+  }
+  if (message.action === 'getReport' || message.action === 'deleteReport') {
+    const id=message.id;
+    if (typeof id!=='string' || !id.startsWith(`es_v${CACHE_VERSION}_`)) throw new Error('Invalid report.');
+    const report=(await chrome.storage.local.get(id))[id];
+    if (!report || report.version!==CACHE_VERSION || Date.now()-report.timestamp<0 || Date.now()-report.timestamp>=CACHE_TTL) throw new Error('This report expired or was removed.');
+    if (message.action==='deleteReport') {cacheEpoch++;await chrome.storage.local.remove(id);return {};}
+    return {...report,cached:true};
+  }
   if (message.action === 'saveSettings' || message.action === 'removeKey') {
     if (!PROVIDERS.includes(message.provider)) throw new Error('Invalid provider.');
     const write = settingsQueue.then(async () => {

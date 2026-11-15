@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 — identity hints and research history
+
+- Added optional public context and LinkedIn profile hints, validated URLs and explicit unverified labels.
+- Added on-page refinement links that prefill settings without spending credits.
+- Added settings-only local history, no-credit report reopening, per-report deletion and a 50-report retention cap.
+- Separated cache entries by research inputs to prevent reuse across different identity hints.
+- Added plain-text exports excluding API keys and unmatched candidate people.
+- Tavily is the default for new installations. 41 automated tests pass; live new-feature testing remains pending.
+
+
 ## 1.3.1 — TikTok author selection
 
 - Bind feed/video checks to explicit author containers rather than caption mentions.

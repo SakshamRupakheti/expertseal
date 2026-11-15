@@ -59,6 +59,8 @@
       if (requestId !== sequence || !panel) return;
       if (!response?.success) throw new Error(response?.error || 'No response. Refresh this tab and try again.');
       render(body, response);
+      const refine = el('button','Refine identity / add LinkedIn'); refine.style.cssText='margin:8px 22px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
+      refine.addEventListener('click',async()=>{try {await chrome.runtime.sendMessage({action:'openSettings',creator});} catch {refine.textContent='Open ExpertSeal settings to refine this creator';}});body.append(refine);
       const again = el('button', 'Refresh research'); again.style.cssText = 'margin:0 22px 20px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
       again.addEventListener('click', () => check(creator, true)); body.append(again);
     } catch (error) {

@@ -111,3 +111,21 @@ test('TikTok video page ignores suggested profile headers and uses video author'
   win.eval(read('content/content.js'));const badges=win.document.querySelectorAll('[data-expertseal-badge]');assert.equal(badges.length,1);
   roots.get(badges[0]).querySelector('button').click();assert.equal(messages[0].creator.username,'@ada');win.happyDOM.abort();
 });
+
+test('report export excludes unmatched people and unrelated secrets',()=>{
+  const {win}=windowAt('https://example.test','');
+  const output=win.ExpertSealReport.exportText({apiKey:'secret-should-not-export',creator:{username:'@bipin.sth',profileUrl:'https://tiktok.com/@bipin.sth',context:'Nepal',linkedinUrl:'https://linkedin.com/in/example'},provider:'tavily',timestamp:Date.now(),data:{summary:'Leads only',sections:[{title:'Career',sources:[{title:'Known lead',url:'https://example.edu',label:'Institution',match:'Unconfirmed',excerpt:'Public excerpt'}],candidates:[{title:'Unrelated private person'}]}],limitations:['Not verified']}});
+  assert.match(output,/Known lead/);assert.match(output,/connection unverified/);assert.match(output,/unmatched results excluded/);
+  assert.ok(!output.includes('secret-should-not-export'));assert.ok(!output.includes('Unrelated private person'));win.happyDOM.abort();
+});
+
+test('popup prefilled creator and history do not launch research or expose keys',async()=>{
+  const {win,messages}=windowAt('chrome-extension://expertseal-test/popup/popup.html?view=full&profile=https%3A%2F%2Fwww.tiktok.com%2F%40bipin.sth&name=Bipin',read('popup/popup.html'));
+  const result={creator:{profileUrl:'https://www.tiktok.com/@bipin.sth',username:'@bipin.sth',displayName:'Bipin',context:'Nepal',linkedinUrl:''},provider:'tavily',timestamp:Date.now(),cached:true,data:{mode:'sources',name:'Bipin',summary:'Review',credentials:[],sources:[],limitations:[]}};
+  win.chrome.runtime.sendMessage=async m=>{messages.push(m);if(m.action==='getHistory')return {success:true,reports:[{id:'test-report',...result}]};if(m.action==='getReport')return {success:true,...result};return {success:true,settings:{provider:'tavily',configured:{tavily:true}},totalVerifications:1,cachedCreators:1};};
+  win.eval(read('popup/popup.js'));await delay(20);
+  assert.equal(win.document.getElementById('profile-url').value,result.creator.profileUrl);assert.equal(messages.filter(m=>m.action==='verify').length,0);
+  win.document.querySelector('.history-open').click();await delay(20);
+  assert.equal(win.document.getElementById('creator-context').value,'Nepal');assert.match(win.document.getElementById('progress').textContent,/No API credits/);
+  assert.equal(messages.filter(m=>m.action==='verify').length,0);win.happyDOM.abort();
+});

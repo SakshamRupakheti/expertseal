@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.3.1 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 34 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.4.0 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 41 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Live testing of the new features remains pending. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -73,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.3.1.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.4.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 
@@ -97,3 +97,14 @@ Direct LinkedIn profile API integration remains unimplemented. Official profile 
 ## TikTok desktop testing
 
 Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome. Use Check credentials beside the profile header. Video/feed buttons require an explicit author container; ambiguous caption mentions are ignored. If TikTok presents a login wall or its layout is unsupported, use the full profile URL and public name in ExpertSeal settings instead. No mobile-app integration is provided. Profile switches are checked against the visible handle to avoid mixing identities. Live TikTok validation remains pending.
+
+## Identity hints and saved reports
+
+- In settings, expand **Improve the match** to add a public field/company/location and the creator's public LinkedIn profile URL. These hints are sent to the selected provider. They are not independently verified.
+- Career and education searches use the supplied LinkedIn URL. A matching result is labeled **Profile supplied by you · connection unverified**. ExpertSeal never treats a user-supplied link as proof that accounts belong to the same person.
+- On-page reports offer **Refine identity / add LinkedIn**, which opens settings with the current creator filled in. Opening settings does not start a search.
+- **Recent reports** opens local cached results without API requests, even after removing a provider key. Each report can be deleted individually; Clear reports removes all cached reports.
+- Reports are retained for seven days and capped at 50; old and expired entries are pruned after successful saves. Queries with different names, context, LinkedIn hints or bios have separate cache entries.
+- **Download report (.txt)** saves a readable research note with links, timestamps and limitations. It excludes unmatched candidate people and API keys. The downloaded file is outside extension storage and is not deleted by Clear reports.
+
+For the current TikTok test, use `https://www.tiktok.com/@bipin.sth`. Only supply a public name or LinkedIn profile if you know it belongs to that creator; do not guess from the handle.

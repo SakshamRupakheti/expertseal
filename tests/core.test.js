@@ -137,3 +137,19 @@ test('dossier separates unrelated Lalit profiles and keeps missing education exp
   assert.equal(dossier.sections[3].sources.length,1);assert.ok(!dossier.sections[3].sources[0].excerpt.includes('Log In'));
   assert.equal(dossier.partial,true);assert.equal(dossier.identityMatched,false);
 });
+
+test('identity hints validate LinkedIn hosts and canonicalize only public profiles',()=>{
+  const c=normalizeCreator({profileUrl:'https://tiktok.com/@bipin.sth',displayName:' Bipin ',context:'Nepal',linkedinUrl:'https://np.linkedin.com/in/bipin/?trk=search'});
+  assert.equal(c.linkedinUrl,'https://www.linkedin.com/in/bipin');assert.equal(c.context,'Nepal');assert.equal(c.displayName,'Bipin');
+  for(const linkedinUrl of ['https://linkedin.com.evil.test/in/bipin','https://secret@linkedin.com/in/bipin','https://linkedin.com/company/example','http://linkedin.com/in/bipin','javascript:alert(1)'])assert.throws(()=>normalizeCreator({profileUrl:c.profileUrl,linkedinUrl}),/LinkedIn/);
+});
+
+test('user-supplied LinkedIn hints narrow career queries without verifying identity',()=>{
+  const creator=normalizeCreator({profileUrl:'https://tiktok.com/@bipin.sth',displayName:'Bipin',context:'Public creator Nepal',linkedinUrl:'https://linkedin.com/in/example'});
+  const career=JSON.parse(requestFor('tavily','test',creator,'career').init.body);
+  assert.match(career.query,/Public creator Nepal/);assert.match(career.query,/linkedin.com\/in\/example/);
+  const social=JSON.parse(requestFor('tavily','test',creator,'social').init.body);assert.ok(!social.query.includes('/in/example'));
+  const response={status:'fulfilled',value:{sources:[{url:creator.linkedinUrl,title:'Different display name',excerpt:'Career'}]}};
+  const dossier=buildDossier(creator,[response,response,{status:'fulfilled',value:{sources:[]}},{status:'fulfilled',value:{sources:[]}}]);
+  assert.equal(dossier.sections[0].sources.length,1);assert.match(dossier.sections[0].sources[0].match,/supplied by you/);assert.equal(dossier.identityMatched,false);
+});

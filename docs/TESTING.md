@@ -36,3 +36,5 @@ November 15 follow-up: user screenshot confirms live HTTP 404/model unavailable.
 1.3.0: user-pasted live report confirms Tavily source results and exposes irrelevant LinkedIn matches and noisy excerpts. Added four focused searches and grouped source view, conservative phrase-based relevance filtering (not identity verification), collapsed unmatched candidates, empty-section labels, deduplication and partial failure handling. 31 automated tests cover regression; live grouped view remains untested.
 
 1.3.1: TikTok feed/video authors are scoped to author containers. Stale profile headers are rejected when the route changes; duplicate badges are avoided. 34 automated tests pass. No live TikTok UI test has been performed; browser control is unavailable in this session.
+
+1.4.0: 41 automated tests pass, including LinkedIn URL validation, user-supplied identity labels, history sender authorization, no-network reopening, hint-specific caches, per-report deletion, retention cap/expiry, public-field export, and settings prefill without auto-research. No new live provider check was performed.

@@ -73,3 +73,35 @@ test('Tavily key stays private and source reports use their own cache',async()=>
     await assert.rejects(dispatch({action:'verify',creator},social),/No API key/);
   } finally {globalThis.fetch=previous;}
 });
+
+test('history is settings-only, uses no API and rejects secret storage IDs',async()=>{
+  await assert.rejects(dispatch({action:'getHistory'},social),/settings/);
+  await assert.rejects(dispatch({action:'getReport',id:'settingsV2'},own),/Invalid report/);
+  await assert.rejects(dispatch({action:'deleteReport',id:'settingsV2'},own),/Invalid report/);
+  const before=calls;const history=await dispatch({action:'getHistory'},own);
+  assert.ok(!JSON.stringify(history).includes('unit-test-credential'));
+  if(history.reports.length){const r=await dispatch({action:'getReport',id:history.reports[0].id},own);assert.equal(r.cached,true);}
+  assert.equal(calls,before);
+});
+
+test('different identity hints use different caches and reports can be deleted independently',async()=>{
+  await dispatch({action:'saveSettings',provider:'gemini',apiKey:'unit-test-credential-1234567890'},own);
+  const before=calls;
+  const a={...creator,context:'Institution A'},b={...creator,context:'Institution B'};
+  await dispatch({action:'verify',creator:a},own);await dispatch({action:'verify',creator:b},own);
+  assert.equal(calls,before+2);await dispatch({action:'verify',creator:a},own);assert.equal(calls,before+2);
+  const history=await dispatch({action:'getHistory'},own);const row=history.reports.find(r=>r.creator.context==='Institution A');
+  await dispatch({action:'deleteReport',id:row.id},own);await assert.rejects(dispatch({action:'getReport',id:row.id},own),/removed/);
+  assert.ok((await dispatch({action:'getHistory'},own)).reports.some(r=>r.creator.context==='Institution B'));
+});
+
+test('saved reports are capped at 50 and expired reports cannot be opened',async()=>{
+  const current=Object.values(local).find(r=>r?.version && r?.data);
+  assert.ok(current);
+  for(let i=0;i<55;i++)local[`es_v${current.version}_fixture_${i}`]={...structuredClone(current),timestamp:Date.now()-1000-i};
+  const expiredId=`es_v${current.version}_expired`;local[expiredId]={...structuredClone(current),timestamp:Date.now()-8*86400000};
+  await assert.rejects(dispatch({action:'getReport',id:expiredId},own),/expired/);
+  await dispatch({action:'verify',creator:{...creator,context:'Retention trigger'},refresh:true},own);
+  assert.equal(Object.keys(local).filter(k=>k.startsWith('es_v')).length,50);
+  assert.equal(local[expiredId],undefined);
+});
