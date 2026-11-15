@@ -13,7 +13,7 @@ ExpertSeal is an open-source browser extension. There is no ExpertSeal server, a
 
 Only when you click Research credentials, Check credentials, or Refresh research, ExpertSeal sends the selected creator's public profile URL, public name and available bio to your selected provider. It also sends your API key directly to that provider over HTTPS. It does not send your social-media cookies, private messages, whole browsing history or page contents.
 
-Provider endpoints are Google's Gemini API, OpenAI's API, or Perplexity's API. Those services perform the AI processing remotely; the extension itself runs locally. BYOK does not mean the AI model runs on your computer.
+Tavily source-search mode sends only the public name/handle and profile URL in a search query, not the bio. It returns source links and excerpts without an AI verdict. Provider endpoints are Tavily's Search API, Google's Gemini API, OpenAI's API, or Perplexity's API. Those services perform search or AI processing remotely; the extension itself runs locally. BYOK does not mean the AI model runs on your computer.
 
 Provider terms, retention and billing apply. Google currently states that free-tier Gemini inputs may be used to improve its products. Do not submit private or sensitive information in the creator-name field. Read the provider's terms before using an API key.
 

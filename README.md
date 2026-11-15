@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.1.0 experimental open-source preview — live verification is currently blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 25 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.2.0 experimental open-source preview. Tavily source search is implemented but awaiting a live key test. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 29 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -17,10 +17,19 @@ Bring your own API key. The extension and its settings run in your browser; AI p
 2. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
 3. Enable **Developer mode**, choose **Load unpacked**, and select the folder containing `manifest.json`.
 4. Open ExpertSeal from the browser's Extensions menu. Choose **Open full page** for longer research sessions.
-5. Choose Gemini, paste your own API key, and click **Save settings**. Do not put keys in source files or GitHub.
+5. Choose Tavily for source search (or an AI provider), paste your own API key, and click **Save settings**. Do not put keys in source files or GitHub.
 6. Enter a YouTube channel URL, TikTok profile URL or X profile URL and click **Research credentials**. Alternatively, refresh a supported social page and use its **Check credentials** button.
 
 After source changes, click **Reload** on the extension card, then refresh the social page. No build or npm installation is needed to load the source extension.
+
+## Free source search with Tavily
+
+1. Create an account at https://app.tavily.com/ and copy a development API key. Keep pay-as-you-go disabled.
+2. In ExpertSeal settings, select **Tavily**, paste the key and save. No Gemini key is needed for this mode.
+3. Check a creator. One fresh lookup makes one basic search (1 credit), with up to five source links and excerpts. Repeated checks use the seven-day cache unless you select Refresh research.
+4. Open the sources and confirm the identity yourself. Results are labeled **Not verified**; there is no AI verdict, credential certification or numerical trust score.
+
+Tavily advertises 1,000 free credits per month without a card. Provider quotas and terms apply. See https://help.tavily.com/articles/8298987937-billing-credits-usage-limits.
 
 ## Free-tier testing with Gemini
 
@@ -30,6 +39,7 @@ ExpertSeal does not enable billing, automatically retry failed calls, switch to 
 
 | Provider | Adapter | Status |
 | --- | --- | --- |
+| Tavily | Basic source search | Implemented; live test pending |
 | Gemini | 2.5 Flash-Lite + Google Search | Live test failed: model unavailable (HTTP 404); diagnostic patch awaiting retest |
 | OpenAI | GPT-4o Search Preview | Optional paid adapter; automated contract checks only |
 | Perplexity | Sonar | Optional paid adapter; automated contract checks only |
@@ -48,7 +58,7 @@ Keys are stored in this browser profile using `chrome.storage.local`, restricted
 
 Clicking a research button sends the creator's public URL, name and available bio to the provider you selected. No automatic API calls, telemetry, social-media cookies or private messages are sent. Reports are cached locally for seven days, separately per provider. **Clear reports** removes cached reports; **Remove key** removes the selected key.
 
-The only general permission is `storage`. Content scripts run on the four declared social domains; host permissions allow HTTPS requests to the three provider API domains. There is no `tabs`, `activeTab` or `scripting` permission.
+The only general permission is `storage`. Content scripts run on the four declared social domains; host permissions allow HTTPS requests to the four provider API domains. There is no `tabs`, `activeTab` or `scripting` permission.
 
 Read [PRIVACY.md](PRIVACY.md) for the full data flow and limitations.
 
@@ -63,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.1.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.2.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 

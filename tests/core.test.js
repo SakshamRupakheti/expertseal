@@ -3,6 +3,35 @@ import assert from 'node:assert/strict';
 import '../lib/identity.js';
 import { extractJson, normalizeReport, requestFor, research, decodeResponse } from '../lib/verification.js';
 const { parseProfileUrl, safeUrl, normalizeCreator } = globalThis.ExpertSealIdentity;
+test('Tavily makes one basic search, sanitizes sources and never verifies credentials', async () => {
+  let calls = 0;
+  const report = await research('tavily', 'unit-test-key', {displayName:'Ada',profileUrl:'https://x.com/ada',bio:'private fixture not sent'}, async (url, init) => {
+    calls++;
+    assert.equal(url, 'https://api.tavily.com/search');
+    assert.equal(init.headers.Authorization, 'Bearer unit-test-key');
+    const body = JSON.parse(init.body);
+    assert.equal(body.search_depth, 'basic'); assert.equal(body.auto_parameters, false);
+    assert.equal(body.include_answer, false); assert.equal(body.max_results, 5);
+    assert.ok(!init.body.includes('private fixture'));
+    return {ok:true,json:async()=>({answer:'Verified professor!',results:[null,
+      {title:'Unsafe',url:'javascript:alert(1)'},
+      {title:'Faculty',url:'https://example.edu/ada',content:'<script>bad()</script>'},
+      {title:'Duplicate',url:'https://example.edu/ada'}]})};
+  });
+  assert.equal(calls, 1); assert.equal(report.mode, 'sources'); assert.equal(report.status, 'inconclusive');
+  assert.equal(report.identityMatched, false); assert.deepEqual(report.credentials, []);
+  assert.equal(report.sources.length, 1); assert.equal(report.sources[0].excerpt, '<script>bad()</script>');
+  assert.ok(!report.summary.includes('professor'));
+});
+test('Tavily handles empty results, malformed payloads and quota without fallback', async () => {
+  assert.equal((await research('tavily','unit-test-key',{},async()=>({ok:true,json:async()=>({results:[]})}))).sources.length,0);
+  await assert.rejects(research('tavily','unit-test-key',{},async()=>({ok:true,json:async()=>({})})), /unreadable/);
+  for (const status of [432,433]) {
+    let calls=0;
+    await assert.rejects(research('tavily','unit-test-key',{},async()=>{calls++;return {ok:false,status};}), /quota/);
+    assert.equal(calls,1);
+  }
+});
 test('canonical creator URLs discard tracking and keep stable identities', () => {
   assert.equal(parseProfileUrl('https://www.youtube.com/@Ada/videos?utm_source=test').profileUrl, 'https://www.youtube.com/@Ada');
   assert.equal(parseProfileUrl('https://youtube.com/channel/UCabcXYZ').username, 'channel/UCabcXYZ');

@@ -60,3 +60,16 @@ test('saving provider is explicit and clearing a key prevents further paid reque
   await dispatch({action:'removeKey',provider:'perplexity'},own);
   const start=calls;await assert.rejects(dispatch({action:'verify',creator},own),/No API key/);assert.equal(calls,start);
 });
+
+test('Tavily key stays private and source reports use their own cache',async()=>{
+  const previous=globalThis.fetch;let requests=0;
+  globalThis.fetch=async url=>{requests++;assert.equal(url,'https://api.tavily.com/search');return {ok:true,json:async()=>({results:[{title:'Record',url:'https://example.edu/person',content:'Public record'}]})};};
+  try {
+    const saved=await dispatch({action:'saveSettings',provider:'tavily',apiKey:'unit-test-tavily-key-1234567890'},own);
+    assert.equal(saved.settings.configured.tavily,true);assert.ok(!JSON.stringify(saved).includes('unit-test-tavily'));
+    const first=await dispatch({action:'verify',creator},social);assert.equal(first.data.mode,'sources');assert.equal(first.cached,false);
+    const second=await dispatch({action:'verify',creator},social);assert.equal(second.cached,true);assert.equal(requests,1);
+    await dispatch({action:'removeKey',provider:'tavily'},own);
+    await assert.rejects(dispatch({action:'verify',creator},social),/No API key/);
+  } finally {globalThis.fetch=previous;}
+});

@@ -46,6 +46,15 @@ test('report treats model text as text and isolates provider suggestion HTML',()
   assert.ok(!Array.from(win.document.querySelectorAll('a')).some(a=>a.href.startsWith('javascript:')));
   const frame=win.document.querySelector('iframe');assert.ok(frame);assert.ok(!frame.getAttribute('sandbox').includes('allow-scripts'));assert.match(frame.srcdoc,/default-src 'none'/);win.happyDOM.abort();
 });
+test('Tavily excerpts render as text and cannot produce a verified badge',()=>{
+  const {win}=windowAt('https://example.test','<div id="report"></div>');
+  win.ExpertSealReport.render(win.document.getElementById('report'),{creator:{username:'@ada',profileUrl:'https://x.com/ada'},provider:'tavily',timestamp:Date.now(),cached:false,data:{mode:'sources',name:'Ada',status:'inconclusive',summary:'Review results',credentials:[],sources:[{title:'Faculty',url:'https://example.edu/ada',excerpt:'<img src=x onerror=alert(1)>'}],limitations:[]}});
+  assert.equal(win.document.querySelectorAll('img,script').length,0);
+  assert.match(win.document.body.textContent,/SOURCE SEARCH/);
+  assert.match(win.document.body.textContent,/Not verified/);
+  assert.match(win.document.body.textContent,/<img/);
+  assert.equal(win.document.querySelector('.found'),null);win.happyDOM.abort();
+});
 test('popup clears entered key after saving and sends manual research only on click',async()=>{
   const {win,messages}=windowAt('chrome-extension://expertseal-test/popup/popup.html?view=full',read('popup/popup.html'));
   win.chrome.runtime.sendMessage=async m=>{messages.push(m);return {success:true,settings:{provider:'gemini',configured:{gemini:m.action==='saveSettings'}},totalVerifications:0,cachedCreators:0};};

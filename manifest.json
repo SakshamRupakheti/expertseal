@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "ExpertSeal",
-  "version": "1.1.0",
-  "description": "Verify the real-world credentials of content creators on social media",
+  "version": "1.2.0",
+  "description": "Research public sources about social-media creators and review credential evidence",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
-    "https://api.perplexity.ai/*"
+    "https://api.perplexity.ai/*",
+    "https://api.tavily.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js",

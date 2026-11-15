@@ -1,7 +1,7 @@
 import '../lib/identity.js';
 import { research, CACHE_VERSION, CACHE_TTL } from '../lib/verification.js';
 const { normalizeCreator, platformForHost } = globalThis.ExpertSealIdentity;
-const PROVIDERS = ['gemini', 'openai', 'perplexity'];
+const PROVIDERS = ['tavily', 'gemini', 'openai', 'perplexity'];
 const KEY_FIELDS = ['apiKey', 'apiKeys', 'geminiApiKey', 'openaiApiKey', 'perplexityApiKey'];
 const inFlight = new Map();
 let settingsQueue = Promise.resolve();

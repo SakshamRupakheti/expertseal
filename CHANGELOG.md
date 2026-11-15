@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 — Tavily source search preview
+
+- Added Tavily BYOK basic search, excerpts and explicit Not verified labeling; no AI verdict.
+- Added Tavily host permission, local key settings, quota errors and provider-separated caching.
+- 29 automated tests pass; live Tavily test pending user key setup.
+
+
 ## 1.1.0 — experimental open-source preview
 
 - Live Edge/YouTube check reached Gemini but failed with HTTP 404/model unavailable. Live testing is deferred; this preview is not production-ready.

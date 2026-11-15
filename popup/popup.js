@@ -1,6 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const providers = {
+    tavily: { link: 'https://app.tavily.com/', name: 'Tavily', description: 'Source search with excerpts, without an AI verdict. Basic search uses 1 credit; the free plan includes 1,000 credits/month. Keep pay-as-you-go disabled. No Gemini key needed.' },
     gemini: { link: 'https://aistudio.google.com/app/apikey', name: 'Gemini', description: 'Gemini 2.5 Flash-Lite + Google Search. Free-tier quotas apply; use a project without paid billing for a free test. Google may use free-tier inputs to improve its products.' },
     openai: { link: 'https://platform.openai.com/api-keys', name: 'OpenAI', description: 'GPT-4o Search adapter. Paid API usage, separate from ChatGPT subscriptions. Experimental: not live-tested in this release.' },
     perplexity: { link: 'https://www.perplexity.ai/settings/api', name: 'Perplexity', description: 'Sonar search adapter. Uses your own API credits. Experimental: not live-tested in this release.' }
