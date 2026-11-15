@@ -8,6 +8,24 @@
   const buttons = new WeakMap();
   let panel = null, sequence = 0, route = location.href, timer;
   function profile(value) { try { return parseProfileUrl(value); } catch { return null; } }
+  function tiktokAuthor(item) {
+    const author = item.matches('[data-e2e="video-author-container"]') ? item : item.querySelector('[data-e2e="video-author-container"]');
+    // Never choose the first arbitrary link in a caption: it may mention another creator.
+    if (!author) return null;
+    const anchor = [author, ...author.querySelectorAll('a[href]')].find(a => a.matches('a[href]') && profile(a.href)?.platform === 'tiktok');
+    const identity = profile(anchor?.href); if (!identity) return null;
+    return {...identity, displayName: author.querySelector('[data-e2e="user-subtitle"]')?.textContent?.trim().slice(0,160) || identity.username, bio:''};
+  }
+  function tiktokProfile(name) {
+    const identity=profile(location.href);
+    if (!identity || identity.platform !== 'tiktok' || /\/video\//.test(location.pathname)) return null;
+    // TikTok can change the route before updating the profile header.
+    const heading=name.textContent.trim().replace(/^@/,'').toLowerCase();
+    if (heading !== identity.username.slice(1).toLowerCase()) return null;
+    const header=name.parentElement;
+    return {...identity, displayName:header.querySelector('[data-e2e="user-subtitle"]')?.textContent?.trim().slice(0,160) || identity.username,
+      bio:header.querySelector('[data-e2e="user-bio"]')?.textContent?.slice(0,2000) || ''};
+  }
   function creatorIn(container, fallback = '') {
     const links = Array.from(container.querySelectorAll('a[href]'));
     const anchor = links.find(a => profile(a.href)?.platform === platform);
@@ -58,12 +76,12 @@
     const host = el('span'); host.dataset.expertsealBadge = 'true'; host.style.cssText = 'display:inline-flex!important;margin:6px 8px!important;vertical-align:middle!important;';
     const shadow = host.attachShadow({ mode: 'closed' });
     const style = el('style'); style.textContent = ':host{all:initial}button{font:600 12px/1.4 system-ui,sans-serif;border:1px solid #4cb99a;border-radius:20px;padding:6px 11px;background:#102e26;color:#baf9e7;cursor:pointer;white-space:nowrap}button:hover{background:#205440}button:focus-visible{outline:2px solid #fff;outline-offset:3px}';
-    const button = el('button', '🛡 Check credentials'); button.type = 'button'; button.title = 'Research this creator with your selected AI provider';
+    const button = el('button', '🛡 Check credentials'); button.type = 'button'; button.title = 'Research this creator with your selected provider';
     button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); const creator = getCreator(); if (creator) check(creator); });
     shadow.append(style, button); container.append(host); buttons.set(container, host);
   }
   function scan() {
-    if (route !== location.href) { route = location.href; closePanel(); }
+    if (route !== location.href) { route = location.href; closePanel(); if (platform === 'tiktok') document.querySelectorAll('[data-expertseal-badge]').forEach(b=>b.remove()); }
     if (platform === 'youtube') {
       document.querySelectorAll('ytd-video-owner-renderer').forEach(owner => attach(owner, () => creatorIn(owner)));
       const identity = profile(location.href);
@@ -83,8 +101,8 @@
       if (name && profile(location.href)) attach(name, () => ({ ...profile(location.href), displayName: name.querySelector('span')?.textContent || '', bio: document.querySelector('[data-testid="UserDescription"]')?.textContent || '' }));
     } else if (platform === 'tiktok') {
       const name = document.querySelector('[data-e2e="user-title"]');
-      if (name && profile(location.href)) attach(name.parentElement, () => ({ ...profile(location.href), displayName: document.querySelector('[data-e2e="user-subtitle"]')?.textContent || name.textContent, bio: document.querySelector('[data-e2e="user-bio"]')?.textContent || '' }));
-      document.querySelectorAll('[data-e2e="video-author-container"], [data-e2e="feed-item"]').forEach(item => attach(item, () => creatorIn(item)));
+      if (name) attach(name.parentElement, () => tiktokProfile(name));
+      document.querySelectorAll('[data-e2e="video-author-container"]').forEach(author => attach(author, () => tiktokAuthor(author)));
     }
   }
   function schedule() { if (!timer) timer = setTimeout(() => { timer = null; scan(); }, 300); }

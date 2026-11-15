@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.3.0 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 31 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.3.1 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 34 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -73,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.3.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.3.1.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 
@@ -93,3 +93,7 @@ See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](
 The grouped view shows up to three matching-name/handle source leads per category, with short excerpts collapsed. Unmatched results are collapsed separately and never attributed to the creator. A phrase match is a relevance filter, not identity verification. Empty sections explicitly say no matching evidence was found. Partial search failures are displayed and not cached.
 
 Direct LinkedIn profile API integration remains unimplemented. Official profile access requires the member's consent and appropriate LinkedIn product permissions; signing in as a viewer does not authorize access to another creator's education or employment. See https://learn.microsoft.com/en-us/linkedin/consumer/integrations/verified-on-linkedin/api-reference/authentication.
+
+## TikTok desktop testing
+
+Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome. Use Check credentials beside the profile header. Video/feed buttons require an explicit author container; ambiguous caption mentions are ignored. If TikTok presents a login wall or its layout is unsupported, use the full profile URL and public name in ExpertSeal settings instead. No mobile-app integration is provided. Profile switches are checked against the visible handle to avoid mixing identities. Live TikTok validation remains pending.

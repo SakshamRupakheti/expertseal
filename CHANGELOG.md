@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — TikTok author selection
+
+- Bind feed/video checks to explicit author containers rather than caption mentions.
+- Reject stale profile headers while navigating between creators.
+- Added profile navigation, feed scoping and video author regression tests (34 total). Live TikTok test pending.
+
+
 ## 1.3.0 — creator background preview
 
 - Grouped Tavily research into career, education, publications and social presence (four basic searches).

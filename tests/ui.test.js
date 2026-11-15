@@ -87,3 +87,27 @@ test('background report groups evidence and collapses unmatched people and excer
   assert.ok([...win.document.querySelectorAll('details')].every(d=>!d.open));
   assert.equal(win.document.querySelectorAll('script').length,0);win.happyDOM.abort();
 });
+
+test('TikTok feed buttons target explicit authors, not caption mentions, without duplicate badges',async()=>{
+  const {win,roots,messages}=windowAt('https://www.tiktok.com/foryou','<div data-e2e="feed-item"><a href="/@mentioned">Mention</a><div data-e2e="video-author-container"><a href="/@first">First</a></div></div><div data-e2e="feed-item"><a href="/@unrelated">Caption</a><div data-e2e="video-author-container"><a href="/@second">Second</a></div></div>');
+  win.eval(read('content/content.js'));
+  const badges=win.document.querySelectorAll('[data-expertseal-badge]');assert.equal(badges.length,2);assert.equal(messages.length,0);
+  roots.get(badges[1]).querySelector('button').click();assert.equal(messages[0].creator.profileUrl,'https://www.tiktok.com/@second');
+  win.document.body.append(win.document.createElement('p'));await delay(350);assert.equal(win.document.querySelectorAll('[data-expertseal-badge]').length,2);win.happyDOM.abort();
+});
+
+test('TikTok route changes never pair a new handle with a stale profile name',async()=>{
+  const {win,roots,messages}=windowAt('https://www.tiktok.com/@ada','<div><h1 data-e2e="user-title">ada</h1><h2 data-e2e="user-subtitle">Ada</h2><p data-e2e="user-bio">Researcher</p></div>');
+  win.eval(read('content/content.js'));const old=win.document.querySelector('[data-expertseal-badge]');
+  win.history.pushState({},'','/@grace');roots.get(old).querySelector('button').click();assert.equal(messages.length,0);
+  win.dispatchEvent(new win.Event('popstate'));await delay(350);assert.equal(win.document.querySelectorAll('[data-expertseal-badge]').length,0);
+  win.document.querySelector('[data-e2e="user-title"]').textContent='grace';win.document.querySelector('[data-e2e="user-subtitle"]').textContent='Grace';
+  await delay(350);const badge=win.document.querySelector('[data-expertseal-badge]');assert.ok(badge);roots.get(badge).querySelector('button').click();
+  assert.equal(messages[0].creator.profileUrl,'https://www.tiktok.com/@grace');assert.equal(messages[0].creator.displayName,'Grace');win.happyDOM.abort();
+});
+
+test('TikTok video page ignores suggested profile headers and uses video author',()=>{
+  const {win,roots,messages}=windowAt('https://www.tiktok.com/@ada/video/123','<div><h1 data-e2e="user-title">someoneelse</h1><h2 data-e2e="user-subtitle">Other</h2></div><a data-e2e="video-author-container" href="/@ada">Ada</a>');
+  win.eval(read('content/content.js'));const badges=win.document.querySelectorAll('[data-expertseal-badge]');assert.equal(badges.length,1);
+  roots.get(badges[0]).querySelector('button').click();assert.equal(messages[0].creator.username,'@ada');win.happyDOM.abort();
+});
