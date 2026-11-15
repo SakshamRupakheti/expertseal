@@ -1,3 +1,4 @@
+> **Prototype status:** This is the initial source snapshot, not a validated production release. LinkedIn API integration is not implemented. Read the [publication review](docs/PUBLICATION_REVIEW.md) for known gaps and the [original project archive](docs/PROJECT_CONTEXT_ARCHIVE.md) for design context. Existing feature, privacy, pricing, and performance claims below should be treated as historical project documentation pending validation.
 <div align="center">
 
 # 🛡️ ExpertSeal
@@ -11,7 +12,7 @@
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange.svg)](ARCHITECTURE.md)
 [![Cost: 100% Free (BYOK)](https://img.shields.io/badge/Cost-100%25%20Free%20%28BYOK%29-brightgreen.svg)](#-supported-providers)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![GitHub Stars](https://img.shields.io/github/stars/expertseal/expertseal?style=social)](https://github.com/expertseal/expertseal/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/SakshamRupakheti/expertseal?style=social)](https://github.com/SakshamRupakheti/expertseal/stargazers)
 
 <br/>
 
@@ -144,7 +145,7 @@ You can install and run ExpertSeal in minutes without any compilation or develop
 
 ### Step 1: Clone or Download this Repo
 ```bash
-git clone https://github.com/expertseal/expertseal.git
+git clone https://github.com/SakshamRupakheti/expertseal.git
 ```
 *(Or click **Code > Download ZIP** and unzip it to a folder on your computer.)*
 
@@ -273,7 +274,7 @@ Copyright (c) 2026 ExpertSeal Contributors.
 
 If you believe the internet needs real-world accountability, please star this repository! ⭐
 
-[![Star History Chart](https://api.star-history.com/svg?repos=expertseal/expertseal&type=Date)](https://star-history.com/#expertseal/expertseal&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=SakshamRupakheti/expertseal&type=Date)](https://star-history.com/#SakshamRupakheti/expertseal&Date)
 
 ---
 

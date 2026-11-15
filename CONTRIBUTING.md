@@ -59,7 +59,7 @@ ExpertSeal requires no complex build step or transpiler for basic development. I
 ### Installation
 1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/expertseal/expertseal.git
+   git clone https://github.com/SakshamRupakheti/expertseal.git
    cd expertseal
    ```
 
@@ -234,7 +234,7 @@ export class ClaudeProvider extends BaseProvider {
    ```bash
    git push origin feat/add-instagram-extractor
    ```
-5. **Open a PR** against the `main` branch of `expertseal/expertseal`.
+5. **Open a PR** against the `main` branch of `SakshamRupakheti/expertseal`.
 6. Fill out all sections of the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 7. Our maintainers will review your PR and provide constructive feedback!
 
