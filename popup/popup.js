@@ -1,391 +1,63 @@
-/**
- * ExpertSeal - Extension Popup Controller
- * Manages provider configuration, BYOK API keys, and cache statistics.
- * Seamlessly integrates with background service-worker.js and Chrome storage.
- */
-
-document.addEventListener('DOMContentLoaded', () => {
-  // UI Elements
-  const statusPill = document.getElementById('status-pill');
-  const statusDot = document.getElementById('status-dot');
-  const statusText = document.getElementById('status-text');
-  
-  const providerCards = document.querySelectorAll('.es-provider-card');
-  const providerDescText = document.getElementById('provider-desc-text');
-  const providerBadge = document.getElementById('provider-badge');
-  const apiKeyLink = document.getElementById('api-key-link');
-  
-  const apiKeyInput = document.getElementById('api-key-input');
-  const toggleKeyVisibilityBtn = document.getElementById('toggle-key-visibility');
-  const eyeIcon = document.getElementById('eye-icon');
-  const eyeOffIcon = document.getElementById('eye-off-icon');
-  
-  const saveBtn = document.getElementById('save-btn');
-  const saveBtnText = document.getElementById('save-btn-text');
-  const saveSpinner = document.getElementById('save-spinner');
-  const saveIcon = document.getElementById('save-icon');
-  
-  const statVerifications = document.getElementById('stat-verifications');
-  const statCached = document.getElementById('stat-cached');
-  const clearCacheBtn = document.getElementById('clear-cache-btn');
-  
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toast-message');
-  let toastTimeout = null;
-
-  // Provider metadata & descriptions
-  const PROVIDER_CONFIG = {
-    gemini: {
-      name: 'Gemini',
-      badge: 'Recommended',
-      keyUrl: 'https://aistudio.google.com/app/apikey',
-      keyLabel: 'Get Gemini Key ↗',
-      description: 'Gemini utilizes Google Search Grounding for high-speed, citation-backed verification of academic records and professional licenses.',
-      placeholder: 'AIzaSy...'
-    },
-    openai: {
-      name: 'OpenAI',
-      badge: 'GPT-4o',
-      keyUrl: 'https://platform.openai.com/api-keys',
-      keyLabel: 'Get OpenAI Key ↗',
-      description: 'OpenAI GPT-4o performs multi-query web search to rigorously verify credentials, publications, and institutional affiliations.',
-      placeholder: 'sk-proj-...'
-    },
-    perplexity: {
-      name: 'Perplexity',
-      badge: 'Sonar Realtime',
-      keyUrl: 'https://www.perplexity.ai/settings/api',
-      keyLabel: 'Get Perplexity Key ↗',
-      description: 'Perplexity Sonar provides real-time web search and domain filtering for deep-dive creator reputation and fact-checking.',
-      placeholder: 'pplx-...'
-    }
+(() => {
+  const $ = id => document.getElementById(id);
+  const providers = {
+    gemini: { link: 'https://aistudio.google.com/app/apikey', name: 'Gemini', description: 'Gemini 2.5 Flash-Lite + Google Search. Free-tier quotas apply; use a project without paid billing for a free test. Google may use free-tier inputs to improve its products.' },
+    openai: { link: 'https://platform.openai.com/api-keys', name: 'OpenAI', description: 'GPT-4o Search adapter. Paid API usage, separate from ChatGPT subscriptions. Experimental: not live-tested in this release.' },
+    perplexity: { link: 'https://www.perplexity.ai/settings/api', name: 'Perplexity', description: 'Sonar search adapter. Uses your own API credits. Experimental: not live-tested in this release.' }
   };
-
-  // State
-  let currentProvider = 'gemini';
-  let storedKeys = {
-    gemini: '',
-    openai: '',
-    perplexity: ''
-  };
-
-  /**
-   * Safe storage access wrappers for chrome.storage
-   */
-  const Storage = {
-    syncGet(defaults) {
-      return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-          chrome.storage.sync.get(defaults, resolve);
-        } else {
-          const result = {};
-          for (const k in defaults) {
-            result[k] = localStorage.getItem(`es_sync_${k}`) || defaults[k];
-          }
-          resolve(result);
-        }
-      });
-    },
-
-    syncSet(data) {
-      return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-          chrome.storage.sync.set(data, resolve);
-        } else {
-          for (const k in data) {
-            localStorage.setItem(`es_sync_${k}`, typeof data[k] === 'object' ? JSON.stringify(data[k]) : data[k]);
-          }
-          resolve();
-        }
-      });
-    },
-
-    localGet(keys) {
-      return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.get(keys, resolve);
-        } else {
-          const result = {};
-          if (Array.isArray(keys)) {
-            keys.forEach((k) => {
-              const val = localStorage.getItem(`es_local_${k}`);
-              try { result[k] = JSON.parse(val); } catch(e) { result[k] = val; }
-            });
-          }
-          resolve(result);
-        }
-      });
-    }
-  };
-
-  /**
-   * Display Toast message
-   */
-  function showToast(message, isError = false) {
-    if (toastTimeout) clearTimeout(toastTimeout);
-    
-    toastMessage.textContent = message;
-    if (isError) {
-      toast.classList.add('es-toast-error');
-    } else {
-      toast.classList.remove('es-toast-error');
-    }
-    
-    toast.classList.remove('es-toast-hidden');
-    
-    toastTimeout = setTimeout(() => {
-      toast.classList.add('es-toast-hidden');
-    }, 3200);
+  let saved = { provider: 'gemini', configured: {} };
+  if (new URLSearchParams(location.search).get('view') === 'full') document.body.classList.add('full-page');
+  async function send(message) {
+    const response = await chrome.runtime.sendMessage(message);
+    if (!response?.success) throw new Error(response?.error || 'Extension unavailable. Reload it and try again.');
+    return response;
   }
-
-  /**
-   * Update status indicator UI
-   */
-  function updateStatus(hasKey) {
-    if (hasKey) {
-      statusPill.className = 'es-status-pill status-ready';
-      statusText.textContent = 'Active';
-      statusPill.title = 'ExpertSeal is active and ready to verify creators.';
-    } else {
-      statusPill.className = 'es-status-pill status-error';
-      statusText.textContent = 'Key Required';
-      statusPill.title = 'API key missing. Enter your key below to activate verification.';
-    }
+  function notice(message, error = false) { $('notice').textContent = message; $('notice').classList.toggle('error', error); }
+  function update() {
+    const provider = $('provider').value;
+    const config = providers[provider];
+    $('provider-description').textContent = config.description;
+    $('key-link').href = config.link; $('key-link').textContent = `Get a ${config.name} key ↗`;
+    $('api-key').placeholder = saved.configured[provider] ? 'Key saved · paste only to replace' : 'Paste your key here';
+    $('saved-status').textContent = saved.configured[provider] ? 'KEY SAVED' : '';
+    $('remove-key').disabled = !saved.configured[provider];
+    const ready = saved.configured[saved.provider];
+    $('status').textContent = ready ? 'Ready' : 'Key needed'; $('status').classList.toggle('ready', Boolean(ready));
   }
-
-  /**
-   * Set active provider in UI
-   */
-  function setProviderUI(provider) {
-    currentProvider = provider;
-    const config = PROVIDER_CONFIG[provider] || PROVIDER_CONFIG.gemini;
-
-    // Update radio and card states
-    providerCards.forEach((card) => {
-      if (card.getAttribute('data-provider') === provider) {
-        card.classList.add('active');
-        const radio = card.querySelector('input[type="radio"]');
-        if (radio) radio.checked = true;
-      } else {
-        card.classList.remove('active');
-      }
-    });
-
-    // Update dynamic text and links
-    providerDescText.textContent = config.description;
-    providerBadge.textContent = config.badge;
-    apiKeyLink.href = config.keyUrl;
-    apiKeyLink.textContent = config.keyLabel;
-    apiKeyInput.placeholder = `Enter ${config.name} API key (${config.placeholder})`;
-
-    // Populate provider key if known
-    const keyForProvider = storedKeys[provider] || '';
-    apiKeyInput.value = keyForProvider;
-
-    // Check status
-    updateStatus(Boolean(keyForProvider.trim()));
-  }
-
-  /**
-   * Load initial data from Chrome storage & service worker
-   */
-  async function loadSettings() {
+  async function stats() { const res = await send({ action: 'getCacheStats' }); $('checks').textContent = res.totalVerifications; $('cached').textContent = res.cachedCreators; }
+  $('provider').addEventListener('change', () => { $('api-key').value = ''; update(); });
+  $('save').addEventListener('click', async () => {
+    $('save').disabled = true;
     try {
-      const syncData = await Storage.syncGet({
-        provider: 'gemini',
-        apiKey: '',
-        geminiApiKey: '',
-        openaiApiKey: '',
-        perplexityApiKey: '',
-        apiKeys: null
-      });
-
-      currentProvider = syncData.provider || 'gemini';
-      
-      // Load keys supporting both formats
-      storedKeys.gemini = syncData.geminiApiKey || (syncData.apiKeys && syncData.apiKeys.gemini) || '';
-      storedKeys.openai = syncData.openaiApiKey || (syncData.apiKeys && syncData.apiKeys.openai) || '';
-      storedKeys.perplexity = syncData.perplexityApiKey || (syncData.apiKeys && syncData.apiKeys.perplexity) || '';
-
-      // Fallback: if only single apiKey exists and matches current provider
-      if (!storedKeys[currentProvider] && syncData.apiKey) {
-        storedKeys[currentProvider] = syncData.apiKey;
-      }
-
-      setProviderUI(currentProvider);
-      
-      // Check status
-      const activeKey = storedKeys[currentProvider] || apiKeyInput.value.trim();
-      updateStatus(Boolean(activeKey));
-
-      // Load statistics
-      await loadStats();
-    } catch (err) {
-      console.error('[ExpertSeal] Failed to load settings:', err);
-      updateStatus(false);
-    }
-  }
-
-  /**
-   * Load stats from service worker or local storage
-   */
-  async function loadStats() {
-    try {
-      // First try sending message to service worker
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: 'getCacheStats' }, (res) => {
-          if (res && res.success && res.stats) {
-            const stats = res.stats;
-            statCached.textContent = (stats.activeEntries ?? stats.totalEntries ?? 0).toLocaleString();
-            // Read verifications counter
-            chrome.storage.local.get(['verificationsCount', 'totalVerifications'], (loc) => {
-              const total = loc.totalVerifications ?? loc.verificationsCount ?? stats.totalEntries ?? 0;
-              statVerifications.textContent = total.toLocaleString();
-            });
-            return;
-          }
-          fallbackReadStats();
-        });
-      } else {
-        fallbackReadStats();
-      }
-    } catch (err) {
-      fallbackReadStats();
-    }
-  }
-
-  /**
-   * Fallback read from chrome.storage.local
-   */
-  async function fallbackReadStats() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(null, (allData) => {
-          if (!allData) return;
-          const cacheKeys = Object.keys(allData).filter(k => k.startsWith('cache_') || k.startsWith('es_cache_'));
-          const totalVerifications = allData.totalVerifications || allData.verificationsCount || cacheKeys.length;
-          statVerifications.textContent = totalVerifications.toLocaleString();
-          statCached.textContent = cacheKeys.length.toLocaleString();
-        });
-      }
-    } catch (e) {
-      console.warn('[ExpertSeal] Stats fallback error:', e);
-    }
-  }
-
-  /**
-   * Save configuration
-   */
-  async function saveSettings() {
-    const rawKey = apiKeyInput.value.trim();
-    if (!rawKey) {
-      showToast(`Please enter an API key for ${PROVIDER_CONFIG[currentProvider].name}`, true);
-      apiKeyInput.focus();
-      return;
-    }
-
-    // Button loading state
-    saveBtn.disabled = true;
-    saveSpinner.classList.remove('es-hidden');
-    saveIcon.classList.add('es-hidden');
-    saveBtnText.textContent = 'Saving...';
-
-    storedKeys[currentProvider] = rawKey;
-
-    const payload = {
-      provider: currentProvider,
-      apiKey: rawKey,
-      geminiApiKey: storedKeys.gemini,
-      openaiApiKey: storedKeys.openai,
-      perplexityApiKey: storedKeys.perplexity,
-      apiKeys: storedKeys,
-      updatedAt: new Date().toISOString()
-    };
-
-    try {
-      // Save directly to chrome.storage.sync
-      await Storage.syncSet(payload);
-
-      // Also notify service worker if available
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: 'saveSettings', settings: payload }, () => {});
-      }
-
-      updateStatus(true);
-      showToast('Settings saved! Ready to verify.');
-    } catch (err) {
-      console.error('[ExpertSeal] Failed to save settings:', err);
-      showToast('Error saving settings. Try again.', true);
-    } finally {
-      saveBtn.disabled = false;
-      saveSpinner.classList.add('es-hidden');
-      saveIcon.classList.remove('es-hidden');
-      saveBtnText.textContent = 'Save Settings';
-    }
-  }
-
-  /**
-   * Clear cache action
-   */
-  async function clearCache() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: 'clearCache' }, (res) => {
-          statCached.textContent = '0';
-          showToast('Verification cache cleared');
-        });
-      } else {
-        statCached.textContent = '0';
-        showToast('Verification cache cleared');
-      }
-    } catch (err) {
-      console.error('[ExpertSeal] Failed to clear cache:', err);
-      showToast('Failed to clear cache', true);
-    }
-  }
-
-  // Event Listeners
-  providerCards.forEach((card) => {
-    card.addEventListener('click', () => {
-      const selected = card.getAttribute('data-provider');
-      if (selected && selected !== currentProvider) {
-        // Save current input before switching
-        if (apiKeyInput.value.trim()) {
-          storedKeys[currentProvider] = apiKeyInput.value.trim();
-        }
-        setProviderUI(selected);
-      }
-    });
+      const response = await send({ action: 'saveSettings', provider: $('provider').value, apiKey: $('api-key').value });
+      saved = response.settings; $('api-key').value = ''; update(); notice('Settings saved in this browser.');
+    } catch (e) { notice(e.message, true); } finally { $('save').disabled = false; }
   });
-
-  // Toggle API key visibility
-  toggleKeyVisibilityBtn.addEventListener('click', () => {
-    const isPassword = apiKeyInput.type === 'password';
-    apiKeyInput.type = isPassword ? 'text' : 'password';
-    if (isPassword) {
-      eyeIcon.classList.add('es-hidden');
-      eyeOffIcon.classList.remove('es-hidden');
-    } else {
-      eyeIcon.classList.remove('es-hidden');
-      eyeOffIcon.classList.add('es-hidden');
-    }
-    apiKeyInput.focus();
+  $('api-key').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+  $('remove-key').addEventListener('click', async () => {
+    try { saved = (await send({ action: 'removeKey', provider: $('provider').value })).settings; $('api-key').value = ''; update(); notice('Key removed from this browser.'); }
+    catch (e) { notice(e.message, true); }
   });
-
-  // Save on button click
-  saveBtn.addEventListener('click', saveSettings);
-
-  // Save on Enter in input
-  apiKeyInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveSettings();
-    }
+  $('verify').addEventListener('click', async () => {
+    let creator;
+    try {
+      creator = globalThis.ExpertSealIdentity.normalizeCreator({ profileUrl: $('profile-url').value.trim(), displayName: $('creator-name').value.trim() });
+      if ($('api-key').value.trim() || $('provider').value !== saved.provider) throw new Error('Save your provider settings first.');
+    } catch (e) { notice(e.message, true); return; }
+    $('verify').disabled = true; $('progress').textContent = 'Researching public sources… this may take up to a minute. Keep this page open.';
+    $('result').hidden = true; notice('');
+    try {
+      const response = await send({ action: 'verify', creator });
+      $('result').hidden = false;
+      const root = $('result').shadowRoot || $('result').attachShadow({ mode: 'open' });
+      globalThis.ExpertSealReport.render(root, response);
+      $('progress').textContent = response.cached ? 'Loaded a saved report. Clear reports to run a fresh check.' : 'Research complete. Review the sources and limitations below.';
+      await stats();
+    } catch (e) { $('progress').textContent = ''; notice(e.message, true); }
+    finally { $('verify').disabled = false; }
   });
-
-  // Clear cache
-  clearCacheBtn.addEventListener('click', clearCache);
-
-  // Initial load
-  loadSettings();
-});
+  $('clear-cache').addEventListener('click', async () => { try { await send({ action: 'clearCache' }); await stats(); $('result').hidden = true; notice('Saved reports cleared. Your keys are unchanged.'); } catch (e) { notice(e.message, true); } });
+  $('open-tab').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html') + '?view=full' }));
+  (async () => { try { saved = (await send({ action: 'getSettings' })).settings; $('provider').value = saved.provider; update(); await stats(); }
+    catch (e) { $('status').textContent = 'Unavailable'; notice(e.message, true); } })();
+})();

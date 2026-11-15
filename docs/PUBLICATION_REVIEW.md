@@ -1,5 +1,7 @@
 # Publication review
 
+> Historical review of the original 1.0.0 upload. The 1.1 implementation addresses storage, permissions, UI isolation and evidence handling. See [current architecture](../ARCHITECTURE.md) and [testing status](TESTING.md); LinkedIn API integration remains unimplemented.
+
 This is a bounded static review of the original ExpertSeal source snapshot (`6678342`) and the author's supplied context archive. It is not a full security audit or a successful live API verification.
 
 ## What is implemented
