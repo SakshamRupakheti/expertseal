@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.2.0 experimental open-source preview. Tavily source search is implemented but awaiting a live key test. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 29 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.3.0 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 31 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -26,7 +26,7 @@ After source changes, click **Reload** on the extension card, then refresh the s
 
 1. Create an account at https://app.tavily.com/ and copy a development API key. Keep pay-as-you-go disabled.
 2. In ExpertSeal settings, select **Tavily**, paste the key and save. No Gemini key is needed for this mode.
-3. Check a creator. One fresh lookup makes one basic search (1 credit), with up to five source links and excerpts. Repeated checks use the seven-day cache unless you select Refresh research.
+3. Check a creator. One fresh report makes four focused basic searches (up to 4 credits): career, education, publications, and social presence. Career and education searches include LinkedIn; returned excerpts are self-reported search leads, not API-verified records. Repeated checks use the seven-day cache unless you select Refresh research.
 4. Open the sources and confirm the identity yourself. Results are labeled **Not verified**; there is no AI verdict, credential certification or numerical trust score.
 
 Tavily advertises 1,000 free credits per month without a card. Provider quotas and terms apply. See https://help.tavily.com/articles/8298987937-billing-credits-usage-limits.
@@ -39,7 +39,7 @@ ExpertSeal does not enable billing, automatically retry failed calls, switch to 
 
 | Provider | Adapter | Status |
 | --- | --- | --- |
-| Tavily | Basic source search | Implemented; live test pending |
+| Tavily | Basic source search | Source search observed working; grouped view awaiting live retest |
 | Gemini | 2.5 Flash-Lite + Google Search | Live test failed: model unavailable (HTTP 404); diagnostic patch awaiting retest |
 | OpenAI | GPT-4o Search Preview | Optional paid adapter; automated contract checks only |
 | Perplexity | Sonar | Optional paid adapter; automated contract checks only |
@@ -73,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.2.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.3.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 
@@ -89,3 +89,7 @@ See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](
 ## License
 
 [MIT](LICENSE). Contributions are welcome; never submit API keys or private creator records.
+
+The grouped view shows up to three matching-name/handle source leads per category, with short excerpts collapsed. Unmatched results are collapsed separately and never attributed to the creator. A phrase match is a relevance filter, not identity verification. Empty sections explicitly say no matching evidence was found. Partial search failures are displayed and not cached.
+
+Direct LinkedIn profile API integration remains unimplemented. Official profile access requires the member's consent and appropriate LinkedIn product permissions; signing in as a viewer does not authorize access to another creator's education or employment. See https://learn.microsoft.com/en-us/linkedin/consumer/integrations/verified-on-linkedin/api-reference/authentication.

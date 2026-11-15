@@ -67,8 +67,8 @@ test('Tavily key stays private and source reports use their own cache',async()=>
   try {
     const saved=await dispatch({action:'saveSettings',provider:'tavily',apiKey:'unit-test-tavily-key-1234567890'},own);
     assert.equal(saved.settings.configured.tavily,true);assert.ok(!JSON.stringify(saved).includes('unit-test-tavily'));
-    const first=await dispatch({action:'verify',creator},social);assert.equal(first.data.mode,'sources');assert.equal(first.cached,false);
-    const second=await dispatch({action:'verify',creator},social);assert.equal(second.cached,true);assert.equal(requests,1);
+    const first=await dispatch({action:'verify',creator},social);assert.equal(first.data.mode,'dossier');assert.equal(first.cached,false);
+    const second=await dispatch({action:'verify',creator},social);assert.equal(second.cached,true);assert.equal(requests,4);
     await dispatch({action:'removeKey',provider:'tavily'},own);
     await assert.rejects(dispatch({action:'verify',creator},social),/No API key/);
   } finally {globalThis.fetch=previous;}

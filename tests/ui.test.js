@@ -75,3 +75,15 @@ test('late research responses do not reopen a dismissed report after navigation'
   resolve({success:false,error:'Late response'});await delay(10);
   assert.equal(win.document.querySelector('[data-expertseal-panel]'),null);win.happyDOM.abort();
 });
+
+test('background report groups evidence and collapses unmatched people and excerpts',()=>{
+  const {win}=windowAt('https://example.test','<div id="report"></div>');
+  win.ExpertSealReport.render(win.document.getElementById('report'),{creator:{username:'@lalitcrock7203',profileUrl:'https://youtube.com/@lalitcrock7203'},provider:'tavily',timestamp:Date.now(),cached:false,data:{mode:'dossier',name:'Unscripted by Lalit',status:'inconclusive',summary:'Background research',credentials:[],sources:[],limitations:[],sections:[
+    {title:'Career experience',sources:[],candidates:[{title:'Lalit BC',url:'https://linkedin.com/in/example',label:'LinkedIn · self-reported',match:'No exact name/handle match',excerpt:'<script>untrusted()</script>'}]},
+    {title:'Education',sources:[],candidates:[]},{title:'Publications & authored work',sources:[],candidates:[]},{title:'Social presence',sources:[],candidates:[]}]}});
+  assert.equal(win.document.querySelectorAll('.section').length,4);
+  assert.match(win.document.body.textContent,/No matching evidence found/);
+  assert.match(win.document.body.textContent,/may be other people/);
+  assert.ok([...win.document.querySelectorAll('details')].every(d=>!d.open));
+  assert.equal(win.document.querySelectorAll('script').length,0);win.happyDOM.abort();
+});

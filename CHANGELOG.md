@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — creator background preview
+
+- Grouped Tavily research into career, education, publications and social presence (four basic searches).
+- Collapsed excerpts and unmatched candidates; removed common login clutter; deduplicated tracking URLs per section.
+- Explicitly label LinkedIn excerpts as self-reported; no LinkedIn OAuth/API integration.
+- Changed cache version so old ungrouped reports are not reused. Partial failures are not cached.
+- 31 automated tests pass; new layout awaits live retest.
+
+
 ## 1.2.0 — Tavily source search preview
 
 - Added Tavily BYOK basic search, excerpts and explicit Not verified labeling; no AI verdict.

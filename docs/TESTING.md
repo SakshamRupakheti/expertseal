@@ -32,3 +32,5 @@ Do not publish real API keys, raw browsing data or unreviewed claims about peopl
 November 15 follow-up: user screenshot confirms live HTTP 404/model unavailable. Added a read-only Gemini model-list diagnostic on 404 (no generation retry or automatic model switch); 25 tests pass. Updated installed output folder and ZIP. Live success remains pending. Newer Gemini free text tiers do not imply free Google Search grounding (pricing checked at https://aistudio.google.com/docs/pricing).
 
 1.2.0: Tavily adapter uses one basic search, no generated answer and no automatic retries. Added request, result sanitization, quota, safe excerpt rendering, local key and cache tests (29 total). Live Tavily check is pending; no Tavily key accessed.
+
+1.3.0: user-pasted live report confirms Tavily source results and exposes irrelevant LinkedIn matches and noisy excerpts. Added four focused searches and grouped source view, conservative phrase-based relevance filtering (not identity verification), collapsed unmatched candidates, empty-section labels, deduplication and partial failure handling. 31 automated tests cover regression; live grouped view remains untested.

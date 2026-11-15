@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../lib/identity.js';
-import { extractJson, normalizeReport, requestFor, research, decodeResponse } from '../lib/verification.js';
+import { extractJson, normalizeReport, requestFor, research, decodeResponse, buildDossier } from '../lib/verification.js';
 const { parseProfileUrl, safeUrl, normalizeCreator } = globalThis.ExpertSealIdentity;
-test('Tavily makes one basic search, sanitizes sources and never verifies credentials', async () => {
+test('Tavily makes four focused searches and never verifies credentials', async () => {
   let calls = 0;
   const report = await research('tavily', 'unit-test-key', {displayName:'Ada',profileUrl:'https://x.com/ada',bio:'private fixture not sent'}, async (url, init) => {
     calls++;
@@ -18,9 +18,9 @@ test('Tavily makes one basic search, sanitizes sources and never verifies creden
       {title:'Faculty',url:'https://example.edu/ada',content:'<script>bad()</script>'},
       {title:'Duplicate',url:'https://example.edu/ada'}]})};
   });
-  assert.equal(calls, 1); assert.equal(report.mode, 'sources'); assert.equal(report.status, 'inconclusive');
+  assert.equal(calls, 4); assert.equal(report.mode, 'dossier'); assert.equal(report.status, 'inconclusive');
   assert.equal(report.identityMatched, false); assert.deepEqual(report.credentials, []);
-  assert.equal(report.sources.length, 1); assert.equal(report.sources[0].excerpt, '<script>bad()</script>');
+  assert.equal(report.sections.length, 4); assert.equal(report.sections[0].candidates.length, 1); assert.equal(report.sections[0].candidates[0].excerpt, 'bad()');
   assert.ok(!report.summary.includes('professor'));
 });
 test('Tavily handles empty results, malformed payloads and quota without fallback', async () => {
@@ -29,7 +29,7 @@ test('Tavily handles empty results, malformed payloads and quota without fallbac
   for (const status of [432,433]) {
     let calls=0;
     await assert.rejects(research('tavily','unit-test-key',{},async()=>{calls++;return {ok:false,status};}), /quota/);
-    assert.equal(calls,1);
+    assert.equal(calls,4);
   }
 });
 test('canonical creator URLs discard tracking and keep stable identities', () => {
@@ -119,4 +119,21 @@ test('a slow provider request is aborted and yields a useful timeout',async cont
   const pending=research('gemini','unit-test-key',{},async(url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(new Error('aborted')))));
   const assertion=assert.rejects(pending,/timed out after 60 seconds/);
   context.mock.timers.tick(60001);await assertion;
+});
+
+
+test('dossier separates unrelated Lalit profiles and keeps missing education explicit',()=>{
+  const creator={displayName:'Unscripted by Lalit',username:'@lalitcrock7203',profileUrl:'https://youtube.com/@lalitcrock7203'};
+  const fulfilled=sources=>({status:'fulfilled',value:{sources}});
+  const dossier=buildDossier(creator,[fulfilled([
+    {title:'Lalit BC',url:'https://www.linkedin.com/in/lalit-bc',excerpt:'Fort Valley State University agricultural professional'},
+    {title:'Lalit .',url:'https://www.linkedin.com/in/lalit-it',excerpt:'Myarth IT consultancy'},
+    {title:'Unscripted by Lalit',url:'https://example.test/lalit',excerpt:'Host biography'}]),fulfilled([]),{status:'rejected',reason:new Error('quota reached')},fulfilled([
+    {title:'Instagram',url:'https://instagram.com/unscripted_by_lalit',excerpt:'Log In Sign Up Unscripted by Lalit profile picture'},
+    {title:'Instagram duplicate',url:'https://instagram.com/unscripted_by_lalit?tracking=1',excerpt:'Unscripted by Lalit'}])]);
+  assert.equal(dossier.sections[0].sources.length,1);assert.equal(dossier.sections[0].candidates.length,2);
+  assert.equal(dossier.sections[0].candidates[0].label,'LinkedIn · self-reported');
+  assert.equal(dossier.sections[1].sources.length,0);assert.match(dossier.sections[2].error,/quota/);
+  assert.equal(dossier.sections[3].sources.length,1);assert.ok(!dossier.sections[3].sources[0].excerpt.includes('Log In'));
+  assert.equal(dossier.partial,true);assert.equal(dossier.identityMatched,false);
 });

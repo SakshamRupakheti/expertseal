@@ -56,7 +56,7 @@ async function verify(input, refresh = false) {
   const task = (async () => {
     const data = await research(provider, key, creator);
     const result = { data, creator, provider, timestamp: Date.now(), version: CACHE_VERSION, cached: false };
-    if (epoch === cacheEpoch) await chrome.storage.local.set({ [id]: result });
+    if (epoch === cacheEpoch && !data.partial) await chrome.storage.local.set({ [id]: result });
     const countWrite = settingsQueue.then(async () => {
       const { totalVerifications = 0 } = await chrome.storage.local.get('totalVerifications');
       await chrome.storage.local.set({ totalVerifications: totalVerifications + 1 });
