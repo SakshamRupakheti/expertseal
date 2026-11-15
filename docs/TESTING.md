@@ -9,9 +9,9 @@
 
 ## Installed browser and live provider
 
-The user reports loading the packaged extension in Edge. Google AI Studio visibly shows the user's Default Gemini Project on the free tier, with one existing key. Key entry is being completed by the user; no key has been read by the agent.
+The user reports loading the packaged extension in Edge. Google AI Studio visibly shows the user's Default Gemini Project on the free tier, with one existing key. The user subsequently reported completing key entry; no key has been read by the agent.
 
-Pending: confirm the extension UI and error state in the installed browser, save the user-owned Gemini key, run one real creator check, inspect the cited sources, repeat for a cache hit, clear reports, and test the on-page badge. No live provider calls have been made by the agent.
+On November 15, 2026, the agent observed the Check credentials badge on the live 3Blue1Brown YouTube channel and clicked it. The resulting report or error was not captured before browser-control access became unavailable. A provider request may have been sent; its outcome remains unverified. Local checks and all 24 automated tests were rerun successfully. Pending: observe the live result, inspect cited sources, repeat for a cache hit, and test clearing reports. Do not treat the live check as passed.
 
 A passing synthetic test is not proof that a live social site's latest layout or a particular provider account works. Do not mark a store release ready until these steps are recorded.
 
@@ -27,3 +27,6 @@ A passing synthetic test is not proof that a live social site's latest layout or
 8. Remove the key, then retry: no provider request should occur.
 
 Do not publish real API keys, raw browsing data or unreviewed claims about people as test fixtures.
+
+
+November 15 follow-up: user screenshot confirms live HTTP 404/model unavailable. Added a read-only Gemini model-list diagnostic on 404 (no generation retry or automatic model switch); 25 tests pass. Updated installed output folder and ZIP. Live success remains pending. Newer Gemini free text tiers do not imply free Google Search grounding (pricing checked at https://aistudio.google.com/docs/pricing).

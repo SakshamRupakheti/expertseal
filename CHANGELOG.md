@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.1.0 — local testing candidate
+## 1.1.0 — experimental open-source preview
+
+- Live Edge/YouTube check reached Gemini but failed with HTTP 404/model unavailable. Live testing is deferred; this preview is not production-ready.
+- Added a read-only model catalog diagnostic for Gemini 404 errors without automatic model switching or generation retries; 25 automated tests pass.
 
 - Added a complete manual profile-URL research flow, full-page settings and clear error states.
 - Switched the default Gemini model to 2.5 Flash-Lite with search grounding, header authentication and a 60-second request timeout. No automatic retries, billing upgrades or paid model fallbacks.

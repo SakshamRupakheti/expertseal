@@ -52,6 +52,25 @@ test('provider failure messages redact raw response and never retry automaticall
   await assert.rejects(research('gemini','unit-test-key',{},async()=>({ok:false,status:403})), /rejected/);
   await assert.rejects(research('gemini','unit-test-key',{},async()=>{throw new TypeError('network secret');}), /internet/);
 });
+test('404 diagnostics list model IDs without retrying generation or exposing provider text', async () => {
+  const calls = [];
+  await assert.rejects(research('gemini', 'unit-test-key', {}, async (url, init) => {
+    calls.push({url, init});
+    return calls.length === 1 ? {ok:false,status:404} : {ok:true,json:async()=>({models:[
+      {name:'models/gemini-test-lite',supportedGenerationMethods:['generateContent']},
+      {name:'secret <html>',supportedGenerationMethods:['generateContent']},
+      {name:'models/gemini-embedding',supportedGenerationMethods:['embedContent']}
+    ]})};
+  }), error => /gemini-test-lite/.test(error.message) && !/secret|embedding/.test(error.message) && /No model switch/.test(error.message));
+  assert.equal(calls.length, 2);
+  assert.match(calls[1].url, /\/models\?pageSize=1000$/);
+  assert.equal(calls[1].init.method, undefined);
+  assert.equal(calls[1].init.headers['x-goog-api-key'], 'unit-test-key');
+  await assert.rejects(research('gemini', 'unit-test-key', {}, async url => {
+    if (url.includes(':generateContent')) return {ok:false,status:404};
+    throw new Error('secret');
+  }), error => /HTTP 404/.test(error.message) && !/secret/.test(error.message));
+});
 test('optional provider adapters preserve search and extract citations', () => {
   const payload=JSON.parse(requestFor('openai','unit-test-key',{}).init.body);
   assert.equal(payload.temperature,undefined); assert.ok(payload.web_search_options);

@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.1.0 local testing candidate.** Automated tests use synthetic responses and page fixtures. See [testing status](docs/TESTING.md) for what has and has not been validated. This is not a Chrome Web Store release.
+**Status: 1.1.0 experimental open-source preview — live verification is currently blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 25 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Testing is deferred. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -30,7 +30,7 @@ ExpertSeal does not enable billing, automatically retry failed calls, switch to 
 
 | Provider | Adapter | Status |
 | --- | --- | --- |
-| Gemini | 2.5 Flash-Lite + Google Search | Default free-tier testing route; live account validation pending |
+| Gemini | 2.5 Flash-Lite + Google Search | Live test failed: model unavailable (HTTP 404); diagnostic patch awaiting retest |
 | OpenAI | GPT-4o Search Preview | Optional paid adapter; automated contract checks only |
 | Perplexity | Sonar | Optional paid adapter; automated contract checks only |
 
@@ -72,7 +72,7 @@ See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](
 - **No badge:** refresh the social page; use a supported creator profile/watch page; try the manual profile-URL field if the site's layout has changed. TikTok/X layouts vary by account and region.
 - **No API key:** open settings, paste the key and save. A saved key is not proof of successful provider authentication.
 - **Quota reached:** wait and inspect your provider quota. ExpertSeal will not upgrade your project or silently switch models.
-- **Model unavailable:** check the provider's model access for your project. Free-tier availability is not guaranteed.
+- **Model unavailable:** Gemini errors now include model IDs from a read-only API catalog request when available. This list does not guarantee project quota or free search grounding. Newer models' free text generation does not imply free Google Search grounding; review pricing before changing models. No model is switched automatically.
 - **Inconclusive:** use the creator's public name to disambiguate, and inspect the sources. Lack of evidence is a valid outcome.
 - **Popup closed:** an in-flight check may finish and cache its result. Reopen the full-page settings, enter the same profile URL and check again.
 
