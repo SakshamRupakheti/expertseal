@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 — TikTok hydration and live validation (2026-11-16)
+
+- Detect profile headers populated through delayed text-node updates, with a regression test.
+- Expose the injected content-script version in a public DOM attribute for diagnosing missing buttons; no creator data or keys are included.
+- Verified a real Tavily report and cached reopening on a TikTok profile in Edge. YouTube's grouped report and cache were also verified live.
+- All 47 automated tests and runtime/manifest checks pass. Gemini model access and remaining manual flows are still unverified; see `docs/TESTING.md`.
+
 ## 1.4.1 — live TikTok fix and correctness audit
 
 - Fixed reversed/nested TikTok display-name and handle headers, confirmed on the live aasthasubedii page.

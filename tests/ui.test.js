@@ -136,3 +136,11 @@ test('live November TikTok layout puts display name in nested h1 and username in
   assert.equal(messages.length,0);roots.get(host).querySelector('button').click();
   assert.equal(messages[0].creator.profileUrl,'https://www.tiktok.com/@aasthasubedii');assert.equal(messages[0].creator.displayName,'aastha❤️');assert.equal(messages[0].creator.bio,'');win.happyDOM.abort();
 });
+
+test('TikTok header hydration via text-node updates triggers detection',async()=>{
+  const {win}=windowAt('https://www.tiktok.com/@aasthasubedii','<div><div><h1 data-e2e="user-title">aastha❤️</h1></div><h2 data-e2e="user-subtitle">Loading</h2></div>');
+  win.eval(read('content/content.js'));assert.equal(win.document.querySelectorAll('[data-expertseal-badge]').length,0);
+  win.document.querySelector('[data-e2e="user-subtitle"]').firstChild.data='aasthasubedii';
+  await delay(350);assert.equal(win.document.querySelectorAll('[data-expertseal-badge]').length,1);
+  assert.equal(win.document.documentElement.dataset.expertsealVersion,'development');win.happyDOM.abort();
+});

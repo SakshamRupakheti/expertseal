@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.4.1 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 46 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Live testing of the new features remains pending. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.4.2 experimental open-source preview. Live Tavily reports and cached reopening have been verified in Edge on YouTube and TikTok.** All 47 automated tests pass using synthetic responses and page fixtures. Gemini's last live request returned HTTP 404 (model unavailable); its diagnostic patch still awaits retesting. Other platform layouts and the remaining manual flows need further testing. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -39,14 +39,14 @@ ExpertSeal does not enable billing, automatically retry failed calls, switch to 
 
 | Provider | Adapter | Status |
 | --- | --- | --- |
-| Tavily | Basic source search | Source search observed working; grouped view awaiting live retest |
+| Tavily | Basic source search | Live grouped reports and cached reopening verified on YouTube and TikTok in Edge |
 | Gemini | 2.5 Flash-Lite + Google Search | Live test failed: model unavailable (HTTP 404); diagnostic patch awaiting retest |
 | OpenAI | GPT-4o Search Preview | Optional paid adapter; automated contract checks only |
 | Perplexity | Sonar | Optional paid adapter; automated contract checks only |
 
 ## What a report means
 
-- **Credential evidence found**: the model reports a matched identity and credential, and the provider returned live-search citations. This is an AI assessment, not independent certification.
+- **Credential evidence found** (AI providers): the model reports a matched identity and credential, and a claimed credential link matches a provider-returned citation. This is an AI assessment, not independent certification. Tavily reports remain **Not verified**.
 - **Inconclusive**: identity, credentials or usable search evidence were missing. Missing records do not establish that a creator is dishonest or unqualified.
 - Reports include the model's summary, cited credentials, provider-returned source links, limitations and a timestamp. Open the sources and verify the identity yourself.
 - Credentials do not prove an individual post is accurate. There are no numerical trust scores or automatic accusations.
@@ -73,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.4.1.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.4.2.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 
@@ -96,7 +96,7 @@ Direct LinkedIn profile API integration remains unimplemented. Official profile 
 
 ## TikTok desktop testing
 
-Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome. Use Check credentials beside the profile header. Video/feed buttons require an explicit author container; ambiguous caption mentions are ignored. If TikTok presents a login wall or its layout is unsupported, use the full profile URL and public name in ExpertSeal settings instead. No mobile-app integration is provided. Profile switches are checked against the visible handle to avoid mixing identities. Live TikTok validation remains pending.
+Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome. Use Check credentials beside the profile header. Video/feed buttons require an explicit author container; ambiguous caption mentions are ignored. If TikTok presents a login wall or its layout is unsupported, use the full profile URL and public name in ExpertSeal settings instead. No mobile-app integration is provided. Profile switches are checked against the visible handle to avoid mixing identities. A live profile check and cached reopening passed in Edge on November 16, 2026; feed/video layouts remain unverified live.
 
 ## Identity hints and saved reports
 
@@ -107,6 +107,6 @@ Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome
 - Reports are retained for seven days and capped at 50; old and expired entries are pruned after successful saves. Queries with different names, context, LinkedIn hints or bios have separate cache entries.
 - **Download report (.txt)** saves a readable research note with links, timestamps and limitations. It excludes unmatched candidate people and API keys. The downloaded file is outside extension storage and is not deleted by Clear reports.
 
-For the current TikTok test, use `https://www.tiktok.com/@bipin.sth`. Only supply a public name or LinkedIn profile if you know it belongs to that creator; do not guess from the handle.
+Only supply a public name or LinkedIn profile if you know it belongs to that creator; do not guess from the handle.
 
-Version 1.4.1 fixes the live TikTok layout where user-title is the display name and user-subtitle is the handle. It supports the older order too. Audited fixes preserve provider ownership of migrated legacy keys, reject credential URLs absent from provider citations, serialize cache clearing with pending writes, and preserve distinct publications identified by query parameters. Previous-schema reports are invalidated; keys remain saved.
+Versions 1.4.1–1.4.2 support both TikTok header orders, nested display names, and delayed text updates during page loading. Audited fixes preserve provider ownership of migrated legacy keys, reject credential URLs absent from provider citations, serialize cache clearing with pending writes, and preserve distinct publications identified by query parameters. Previous-schema reports are invalidated; keys remain saved.

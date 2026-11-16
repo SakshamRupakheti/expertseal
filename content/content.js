@@ -5,6 +5,8 @@
   const { render, el } = globalThis.ExpertSealReport;
   const platform = platformForHost(location.hostname);
   if (!platform) return;
+  // Public, non-sensitive diagnostics: distinguishes injection from detection failures.
+  document.documentElement.dataset.expertsealVersion=chrome.runtime.getManifest?.().version || 'development';
   const buttons = new WeakMap();
   let panel = null, sequence = 0, route = location.href, timer;
   function profile(value) { try { return parseProfileUrl(value); } catch { return null; } }
@@ -117,7 +119,7 @@
     }
   }
   function schedule() { if (!timer) timer = setTimeout(() => { timer = null; scan(); }, 300); }
-  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(schedule).observe(document.documentElement, { childList: true, characterData: true, subtree: true });
   window.addEventListener('popstate', schedule);
   window.addEventListener('yt-navigate-finish', schedule);
   document.addEventListener('keydown', event => { if (event.key === 'Escape') closePanel(); });

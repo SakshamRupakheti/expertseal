@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ExpertSeal",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Research public sources about social-media creators and review credential evidence",
   "permissions": [
     "storage"
