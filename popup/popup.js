@@ -13,7 +13,10 @@
   $('creator-name').value=(params.get('name') || '').slice(0,160);
   async function send(message) {
     const response = await chrome.runtime.sendMessage(message);
-    if (!response?.success) throw new Error(response?.error || 'Extension unavailable. Reload it and try again.');
+    if (!response?.success) {
+      if (response?.error === 'Invalid provider.' || response?.error === 'Unknown extension action.') throw new Error('ExpertSeal needs a full reload. Close this page, open edge://extensions (or chrome://extensions), click Reload on ExpertSeal, then reopen settings. Your saved keys stay in this browser.');
+      throw new Error(response?.error || 'Extension unavailable. Reload it and try again.');
+    }
     return response;
   }
   function notice(message, error = false) { $('notice').textContent = message; $('notice').classList.toggle('error', error); }

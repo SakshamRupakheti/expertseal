@@ -105,3 +105,37 @@ test('saved reports are capped at 50 and expired reports cannot be opened',async
   assert.equal(Object.keys(local).filter(k=>k.startsWith('es_v')).length,50);
   assert.equal(local[expiredId],undefined);
 });
+
+test('legacy generic keys stay with Gemini while clean installs default to Tavily',async()=>{
+  const previousChrome=globalThis.chrome;
+  try {
+    for(const [index,legacy] of [{apiKey:'unit-test-legacy-gemini-key-1234'},{}].entries()) {
+      const isolatedLocal={},isolatedSync={...legacy};
+      globalThis.chrome={storage:{local:area(isolatedLocal),sync:area(isolatedSync)},runtime:previousChrome.runtime};
+      const isolated=await import(`../background/service-worker.js?migration-case=${index}`);
+      const res=await isolated.dispatch({action:'getSettings'},own);
+      assert.equal(res.settings.provider,index===0?'gemini':'tavily');
+      assert.equal(res.settings.configured.gemini,index===0);assert.equal(res.settings.configured.tavily,false);
+      assert.ok(!JSON.stringify(res).includes('unit-test-legacy'));
+      assert.equal(isolatedSync.apiKey,undefined);
+    }
+  } finally {globalThis.chrome=previousChrome;}
+});
+
+test('clear waits for an already-started storage write and leaves no reports behind',async()=>{
+  const previousSet=chrome.storage.local.set;
+  let unblock,entered;
+  const blocked=new Promise(resolve=>entered=resolve);
+  const gate=new Promise(resolve=>unblock=resolve);
+  chrome.storage.local.set=async values=>{
+    if(Object.keys(values).some(k=>k.startsWith('es_v'))){entered();await gate;}
+    return previousSet(values);
+  };
+  try {
+    const pending=dispatch({action:'verify',creator:{...creator,context:'Clear during pending storage write'},refresh:true},own);
+    await blocked;
+    const clearing=dispatch({action:'clearCache'},own);
+    unblock();await Promise.all([pending,clearing]);
+    assert.equal(Object.keys(local).filter(k=>k.startsWith('es_v')).length,0);
+  } finally {unblock();chrome.storage.local.set=previousSet;}
+});

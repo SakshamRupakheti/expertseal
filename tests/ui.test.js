@@ -129,3 +129,10 @@ test('popup prefilled creator and history do not launch research or expose keys'
   assert.equal(win.document.getElementById('creator-context').value,'Nepal');assert.match(win.document.getElementById('progress').textContent,/No API credits/);
   assert.equal(messages.filter(m=>m.action==='verify').length,0);win.happyDOM.abort();
 });
+
+test('live November TikTok layout puts display name in nested h1 and username in h2',()=>{
+  const {win,roots,messages}=windowAt('https://www.tiktok.com/@aasthasubedii','<div id="main-content-others_homepage"><div><div><h1 data-e2e="user-title">aastha❤️</h1></div><div></div><h2 data-e2e="user-subtitle">aasthasubedii</h2></div><div><h2 data-e2e="user-bio">No bio yet.</h2></div></div>');
+  win.eval(read('content/content.js'));const host=win.document.querySelector('[data-expertseal-badge]');assert.ok(host);
+  assert.equal(messages.length,0);roots.get(host).querySelector('button').click();
+  assert.equal(messages[0].creator.profileUrl,'https://www.tiktok.com/@aasthasubedii');assert.equal(messages[0].creator.displayName,'aastha❤️');assert.equal(messages[0].creator.bio,'');win.happyDOM.abort();
+});

@@ -38,3 +38,7 @@ November 15 follow-up: user screenshot confirms live HTTP 404/model unavailable.
 1.3.1: TikTok feed/video authors are scoped to author containers. Stale profile headers are rejected when the route changes; duplicate badges are avoided. 34 automated tests pass. No live TikTok UI test has been performed; browser control is unavailable in this session.
 
 1.4.0: 41 automated tests pass, including LinkedIn URL validation, user-supplied identity labels, history sender authorization, no-network reopening, hint-specific caches, per-report deletion, retention cap/expiry, public-field export, and settings prefill without auto-research. No new live provider check was performed.
+
+November 16, 2026 (1.4.1): browser inspection of aasthasubedii confirmed a missing badge and live markup with display name in nested user-title h1 and handle in user-subtitle h2. Fixed both supported layouts and added the observed structure as a regression fixture. Independent audit found/fixed legacy key reassignment, unbound credential citations, cache clear/write race, and publication URL deduplication. 46 tests pass. Live fix still requires reloading the extension.
+
+Live check November 16: after user-reported reload to 1.4.1, YouTube 3Blue1Brown displayed the badge, completed a Tavily dossier, opened its original About source, and reopening displayed Cached. Screenshot saved locally (not committed). TikTok aasthasubedii still has no badge despite the observed-layout fixture passing; site-access/loaded-folder confirmation is pending. Do not claim TikTok live success.

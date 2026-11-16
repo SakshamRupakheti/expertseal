@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.1 — live TikTok fix and correctness audit
+
+- Fixed reversed/nested TikTok display-name and handle headers, confirmed on the live aasthasubedii page.
+- Preserved Gemini ownership for provider-less legacy keys during migration.
+- Required claimed credential links to match provider-returned citations.
+- Serialized report clearing/deletion with pending storage writes.
+- Preserved publication-identifying query parameters during deduplication.
+- Added clearer full-reload guidance for stale extension workers.
+- Invalidated pre-fix cached reports. 46 automated tests pass; installed fix awaits reload.
+
+
 ## 1.4.0 — identity hints and research history
 
 - Added optional public context and LinkedIn profile hints, validated URLs and explicit unverified labels.

@@ -20,11 +20,20 @@
     const identity=profile(location.href);
     if (!identity || identity.platform !== 'tiktok' || /\/video\//.test(location.pathname)) return null;
     // TikTok can change the route before updating the profile header.
-    const heading=name.textContent.trim().replace(/^@/,'').toLowerCase();
-    if (heading !== identity.username.slice(1).toLowerCase()) return null;
-    const header=name.parentElement;
-    return {...identity, displayName:header.querySelector('[data-e2e="user-subtitle"]')?.textContent?.trim().slice(0,160) || identity.username,
-      bio:header.querySelector('[data-e2e="user-bio"]')?.textContent?.slice(0,2000) || ''};
+    let header=name.parentElement;
+    // November 2026 layout nests the display-name h1, with the handle in h2.
+    // Older layouts put the handle in h1. Find their common local container.
+    for(let depth=0;depth<4 && header && !header.querySelector('[data-e2e="user-subtitle"]');depth++) header=header.parentElement;
+    if(!header) return null;
+    const subtitle=header.querySelector('[data-e2e="user-subtitle"]');
+    const titleText=name.textContent.trim(), subtitleText=subtitle?.textContent?.trim() || '';
+    const handle=identity.username.slice(1).toLowerCase();
+    const isHandle=value=>value.replace(/^@/,'').toLowerCase()===handle;
+    if (!isHandle(titleText) && !isHandle(subtitleText)) return null;
+    const profileArea=name.closest('#main-content-others_homepage') || header;
+    const bio=profileArea.querySelector('[data-e2e="user-bio"]')?.textContent?.trim() || '';
+    return {...identity, displayName:(isHandle(titleText) ? subtitleText : titleText).slice(0,160) || identity.username,
+      bio:bio === 'No bio yet.' ? '' : bio.slice(0,2000)};
   }
   function creatorIn(container, fallback = '') {
     const links = Array.from(container.querySelectorAll('a[href]'));

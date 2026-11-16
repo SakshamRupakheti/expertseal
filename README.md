@@ -6,7 +6,7 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.4.0 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 41 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Live testing of the new features remains pending. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**Status: 1.4.1 experimental open-source preview. Tavily source search worked in a user-supplied report; the new grouped background view awaits live retesting. Gemini live verification remains blocked.** The installed Edge build displayed its YouTube badge, but the live Gemini request returned HTTP 404 (model unavailable). The latest diagnostic patch has not been retested live. All 46 automated tests pass with synthetic responses and page fixtures; these do not establish live provider compatibility. Live testing of the new features remains pending. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
 
 ## Install locally
 
@@ -73,7 +73,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.4.0.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-1.4.1.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 
@@ -108,3 +108,5 @@ Open a creator's full https://www.tiktok.com/@username profile in Edge or Chrome
 - **Download report (.txt)** saves a readable research note with links, timestamps and limitations. It excludes unmatched candidate people and API keys. The downloaded file is outside extension storage and is not deleted by Clear reports.
 
 For the current TikTok test, use `https://www.tiktok.com/@bipin.sth`. Only supply a public name or LinkedIn profile if you know it belongs to that creator; do not guess from the handle.
+
+Version 1.4.1 fixes the live TikTok layout where user-title is the display name and user-subtitle is the handle. It supports the older order too. Audited fixes preserve provider ownership of migrated legacy keys, reject credential URLs absent from provider citations, serialize cache clearing with pending writes, and preserve distinct publications identified by query parameters. Previous-schema reports are invalidated; keys remain saved.

@@ -153,3 +153,27 @@ test('user-supplied LinkedIn hints narrow career queries without verifying ident
   const dossier=buildDossier(creator,[response,response,{status:'fulfilled',value:{sources:[]}},{status:'fulfilled',value:{sources:[]}}]);
   assert.equal(dossier.sections[0].sources.length,1);assert.match(dossier.sections[0].sources[0].match,/supplied by you/);assert.equal(dossier.identityMatched,false);
 });
+
+test('unrelated provider citations cannot validate a model-invented credential link',()=>{
+  const report=normalizeReport({status:'evidence_found',identityMatched:true,credentials:[{title:'Claimed degree',url:'https://invented.example/degree'}]},
+    {searched:true,sources:[{url:'https://example.edu/unrelated'}]});
+  assert.equal(report.status,'inconclusive');assert.deepEqual(report.credentials,[]);
+  assert.match(report.limitations.join(' '),/no matching provider-returned citation/);
+  const supported=normalizeReport({status:'evidence_found',identityMatched:true,credentials:[{title:'Degree',url:'https://example.edu/profile?utm_source=test'}]},
+    {searched:true,sources:[{url:'https://example.edu/profile'}]});
+  assert.equal(supported.status,'evidence_found');
+});
+
+test('dossier deduplication preserves distinct query-identified publications',()=>{
+  const creator={displayName:'Jane Doe',username:'@janedoe',profileUrl:'https://x.com/janedoe'};
+  const empty={status:'fulfilled',value:{sources:[]}};
+  const publication={status:'fulfilled',value:{sources:[
+    {title:'Jane Doe first work',url:'https://www.youtube.com/watch?v=111',excerpt:'Jane Doe'},
+    {title:'Jane Doe second work',url:'https://www.youtube.com/watch?v=222',excerpt:'Jane Doe'},
+    {title:'Jane Doe duplicate',url:'https://www.youtube.com/watch?v=111&utm_source=test',excerpt:'Jane Doe'}]}};
+  const result=buildDossier(creator,[empty,empty,publication,empty]);
+  assert.equal(result.sections[2].sources.length,2);
+  const credential=normalizeReport({status:'evidence_found',identityMatched:true,credentials:[{title:'Wrong article',url:'https://example.edu/article?id=1'}]},
+    {searched:true,sources:[{url:'https://example.edu/article?id=2'}]});
+  assert.equal(credential.status,'inconclusive');
+});

@@ -12,8 +12,12 @@ const ready = (async () => {
   const local = await chrome.storage.local.get(['settingsV2']);
   if (!local.settingsV2) {
     const old = await chrome.storage.sync.get(['provider', ...KEY_FIELDS]);
-    const provider = PROVIDERS.includes(old.provider) ? old.provider : 'tavily';
-    const keys = Object.fromEntries(PROVIDERS.map(p => [p, old[`${p}ApiKey`] || old.apiKeys?.[p] || (provider === p ? old.apiKey : '') || '']));
+    // Old installations defaulted a provider-less generic key to Gemini.
+    // A new-install default must never reassign that secret to another vendor.
+    const hasLegacySettings = Boolean(old.provider) || KEY_FIELDS.some(field => Boolean(old[field]));
+    const provider = PROVIDERS.includes(old.provider) ? old.provider : hasLegacySettings ? 'gemini' : 'tavily';
+    const genericKeyProvider = PROVIDERS.includes(old.provider) ? old.provider : old.provider ? null : 'gemini';
+    const keys = Object.fromEntries(PROVIDERS.map(p => [p, old[`${p}ApiKey`] || old.apiKeys?.[p] || (genericKeyProvider === p ? old.apiKey : '') || '']));
     await chrome.storage.local.set({ settingsV2: { provider, keys }, totalVerifications: 0 });
   }
   await chrome.storage.sync.remove(KEY_FIELDS);
@@ -106,7 +110,12 @@ export async function dispatch(message, sender) {
     if (typeof id!=='string' || !id.startsWith(`es_v${CACHE_VERSION}_`)) throw new Error('Invalid report.');
     const report=(await chrome.storage.local.get(id))[id];
     if (!report || report.version!==CACHE_VERSION || Date.now()-report.timestamp<0 || Date.now()-report.timestamp>=CACHE_TTL) throw new Error('This report expired or was removed.');
-    if (message.action==='deleteReport') {cacheEpoch++;await chrome.storage.local.remove(id);return {};}
+    if (message.action==='deleteReport') {
+      cacheEpoch++;
+      const remove = settingsQueue.then(async () => { await chrome.storage.local.remove(id); return {}; });
+      settingsQueue = remove.catch(() => {});
+      return remove;
+    }
     return {...report,cached:true};
   }
   if (message.action === 'saveSettings' || message.action === 'removeKey') {
@@ -130,10 +139,16 @@ export async function dispatch(message, sender) {
   }
   if (message.action === 'clearCache') {
     cacheEpoch++;
-    const all = await chrome.storage.local.get(null);
-    const keys = Object.keys(all).filter(k => k.startsWith('es_v') || k.startsWith('cache_') || k.startsWith('es_cache_'));
-    await chrome.storage.local.remove(keys);
-    return { cleared: keys.length };
+    // Serialize with report writes as well as settings writes. The epoch alone
+    // cannot stop storage.set that has already started but has not completed.
+    const clear = settingsQueue.then(async () => {
+      const all = await chrome.storage.local.get(null);
+      const keys = Object.keys(all).filter(k => k.startsWith('es_v') || k.startsWith('cache_') || k.startsWith('es_cache_'));
+      await chrome.storage.local.remove(keys);
+      return { cleared: keys.length };
+    });
+    settingsQueue = clear.catch(() => {});
+    return clear;
   }
   if (message.action === 'getCacheStats') {
     const all = await chrome.storage.local.get(null);
