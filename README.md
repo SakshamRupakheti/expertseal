@@ -1,6 +1,12 @@
 # 🛡️ ExpertSeal
 
-**Research a creator's credentials. Read the evidence. Decide for yourself.**
+**Before you trust the advice, check who's giving it.**
+
+Your feed is full of confident advice. ExpertSeal helps you look into the person behind it: career experience, education, publications and social presence, with source links you can inspect yourself.
+
+**Open source · MIT licensed · Bring your own key · No ExpertSeal subscription**
+
+[Get started](#install-locally) · [What the evidence means](#what-a-report-means) · [Contribute](CONTRIBUTING.md) · [Launch caption](docs/LAUNCH.md)
 
 ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It adds an on-demand **Check credentials** button on supported YouTube, TikTok and X/Twitter pages, plus a manual profile-URL check in the extension popup.
 
