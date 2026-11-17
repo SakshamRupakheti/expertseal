@@ -144,3 +144,24 @@ test('TikTok header hydration via text-node updates triggers detection',async()=
   await delay(350);assert.equal(win.document.querySelectorAll('[data-expertseal-badge]').length,1);
   assert.equal(win.document.documentElement.dataset.expertsealVersion,'development');win.happyDOM.abort();
 });
+
+test('local report shows four concise statements first and collapses all detailed evidence',()=>{
+  const {win}=windowAt('https://example.test','<div id="report"></div>');
+  const data={mode:'expertise',name:'Avery Reed',identity:{state:'unresolved',explanation:'Identity unresolved',evidence:[]},topic:{subject:'biology',hint:'Public profile context'},statements:['Identity: Unresolved.','Education: Not independently confirmed.','Experience: Not independently confirmed.','Topic fit: Insufficient evidence.'].map(text=>({text,urls:[]})),credentials:[],sources:[],leads:[{title:'<script>Candidate</script>',url:'javascript:alert(1)',excerpt:'Candidate only'}],limitations:['No degree does not mean no expertise.'],summaryMode:'deterministic_fallback'};
+  win.ExpertSealReport.render(win.document.getElementById('report'),{creator:{username:'@avery_fixture',profileUrl:'https://x.com/avery_fixture'},data,provider:'local',timestamp:Date.now()});
+  assert.equal(win.document.querySelector('[aria-label="Expertise summary"]').children.length,4);
+  assert.ok([...win.document.querySelectorAll('details')].every(d=>!d.open));assert.equal(win.document.querySelectorAll('script').length,0);
+  assert.match(win.document.body.textContent,/Limited mode/);assert.ok(!win.document.querySelector('a[href^="javascript:"]'));win.happyDOM.abort();
+});
+test('selected post hint comes only from the clicked X author article',()=>{
+  const {win,roots,messages}=windowAt('https://x.com/home','<article data-testid="tweet"><div data-testid="User-Name"><a href="/avery_fixture"><span>Avery</span></a></div><p data-testid="tweetText">Mechanical engineering</p></article><article data-testid="tweet"><div data-testid="User-Name"><a href="/other_fixture"><span>Other</span></a></div><p data-testid="tweetText">Oncology</p></article>');
+  win.eval(read('content/content.js'));roots.get(win.document.querySelector('[data-expertseal-badge]')).querySelector('button').click();
+  assert.equal(messages[0].creator.topicHint,'Mechanical engineering');win.happyDOM.abort();
+});
+test('local permission refusal does not save settings or transmit the token',async()=>{
+  const {win,messages}=windowAt('chrome-extension://expertseal-test/popup/popup.html',read('popup/popup.html'));
+  win.chrome.permissions={request:async()=>false};
+  win.chrome.runtime.sendMessage=async m=>{messages.push(m);return {success:true,settings:{provider:'tavily',configured:{}},reports:[],totalVerifications:0,cachedCreators:0};};
+  win.eval(read('popup/popup.js'));await delay(15);win.document.getElementById('provider').value='local';win.document.getElementById('api-key').value='synthetic-local-token';win.document.getElementById('save').click();await delay(15);
+  assert.equal(messages.filter(m=>m.action==='saveSettings').length,0);assert.match(win.document.getElementById('notice').textContent,/not granted/);win.happyDOM.abort();
+});

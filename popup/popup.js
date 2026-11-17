@@ -1,6 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const providers = {
+    local: { link: 'https://github.com/SakshamRupakheti/expertseal', name:'Local companion', description:'Optional service at 127.0.0.1:3210. Uses your SearXNG, public academic records and local Ollama. Paste the pairing token from your private companion configuration. Save requests local network permission; no paid provider fallback.' },
     tavily: { link: 'https://app.tavily.com/', name: 'Tavily', description: 'Career, education, publications and social profiles. A fresh report uses up to 4 basic search credits; the free plan includes 1,000 credits/month. Keep pay-as-you-go disabled. No Gemini key needed.' },
     gemini: { link: 'https://aistudio.google.com/app/apikey', name: 'Gemini', description: 'Gemini 2.5 Flash-Lite + Google Search. Free-tier quotas apply; use a project without paid billing for a free test. Google may use free-tier inputs to improve its products.' },
     openai: { link: 'https://platform.openai.com/api-keys', name: 'OpenAI', description: 'GPT-4o Search adapter. Paid API usage, separate from ChatGPT subscriptions. Experimental: not live-tested in this release.' },
@@ -11,6 +12,7 @@
   const params=new URLSearchParams(location.search);
   $('profile-url').value=params.get('profile') || '';
   $('creator-name').value=(params.get('name') || '').slice(0,160);
+  $('subject').value=(params.get('subject') || '').slice(0,120);
   async function send(message) {
     const response = await chrome.runtime.sendMessage(message);
     if (!response?.success) {
@@ -25,6 +27,8 @@
     const config = providers[provider];
     $('provider-description').textContent = config.description;
     $('key-link').href = config.link; $('key-link').textContent = `Get a ${config.name} key ↗`;
+    $('key-label').textContent=provider==='local' ? 'Companion pairing token' : 'API key';
+    if(provider==='local') $('key-link').textContent='Companion setup on GitHub';
     $('api-key').placeholder = saved.configured[provider] ? 'Key saved · paste only to replace' : 'Paste your key here';
     $('saved-status').textContent = saved.configured[provider] ? 'KEY SAVED' : '';
     $('remove-key').disabled = !saved.configured[provider];
@@ -51,6 +55,7 @@
           const result=await send({action:'getReport',id:report.id});showReport(result);
           $('profile-url').value=result.creator.profileUrl;$('creator-name').value=result.creator.displayName || '';
           $('creator-context').value=result.creator.context || '';$('linkedin-url').value=result.creator.linkedinUrl || '';
+          $('subject').value=result.creator.subject || '';
           notice('Saved report opened; your selected provider is unchanged.');
         } catch(e) {notice(e.message,true);}
       });
@@ -64,6 +69,7 @@
   $('save').addEventListener('click', async () => {
     $('save').disabled = true;
     try {
+      if($('provider').value==='local' && !await chrome.permissions.request({origins:['http://127.0.0.1/*']})) throw new Error('Local access was not granted. Your provider setting is unchanged.');
       const response = await send({ action: 'saveSettings', provider: $('provider').value, apiKey: $('api-key').value });
       saved = response.settings; $('api-key').value = ''; update(); notice('Settings saved in this browser.');
     } catch (e) { notice(e.message, true); } finally { $('save').disabled = false; }
@@ -76,10 +82,10 @@
   $('verify').addEventListener('click', async () => {
     let creator;
     try {
-      creator = globalThis.ExpertSealIdentity.normalizeCreator({ profileUrl: $('profile-url').value.trim(), displayName: $('creator-name').value.trim(), context:$('creator-context').value,linkedinUrl:$('linkedin-url').value.trim() });
+      creator = globalThis.ExpertSealIdentity.normalizeCreator({ profileUrl: $('profile-url').value.trim(), displayName: $('creator-name').value.trim(), context:$('creator-context').value,linkedinUrl:$('linkedin-url').value.trim(),subject:$('subject').value,topicHint:params.get('topicHint') || '' });
       if ($('api-key').value.trim() || $('provider').value !== saved.provider) throw new Error('Save your provider settings first.');
     } catch (e) { notice(e.message, true); return; }
-    researching=true;$('verify').disabled = true; $('progress').textContent = 'Researching public sources… this may take up to a minute. Keep this page open.';
+    researching=true;$('verify').disabled = true; $('progress').textContent = 'Researching public sources… this may take up to two minutes. Keep this page open.';
     $('result').hidden = true; notice('');
     try {
       const response = await send({ action: 'verify', creator });

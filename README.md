@@ -12,7 +12,11 @@ ExpertSeal is a Manifest V3 browser extension for Chrome and Microsoft Edge. It 
 
 Bring your own API key. The extension and its settings run in your browser; AI processing happens at your selected provider. There is no ExpertSeal backend or subscription.
 
-**Status: 1.4.2 experimental open-source preview. Live Tavily reports and cached reopening have been verified in Edge on YouTube and TikTok.** All 47 automated tests pass using synthetic responses and page fixtures. Gemini's last live request returned HTTP 404 (model unavailable); its diagnostic patch still awaits retesting. Other platform layouts and the remaining manual flows need further testing. See [testing status](docs/TESTING.md). This is not a Chrome Web Store release.
+**This feature branch contains the 2.0 local-research preview.** The established provider flows are preserved. The optional companion adds MCP tools, conservative source-based identity handling and four-line expertise summaries. It has automated transport/evidence tests, but the complete live SearXNG-to-browser workflow is not yet verified. See [local setup](docs/LOCAL-RESEARCH.md) and [testing status](docs/TESTING.md). This branch is not a store release.
+
+**Verify the evidence, not someone's popularity.** Local mode does not use follower counts, badges, engagement or institutional prestige. It distinguishes documented qualifications, topic overlap and factual accuracy. Missing evidence does not mean a creator lacks expertise.
+
+Choose **Local open-source research** only after setting up the companion. It is optional, requires no paid model API, and never switches providers automatically. Public-source discovery still uses the internet. The installed 1.4.2 Tavily flows were previously tested live on YouTube and TikTok; that is not a live validation of the new mode.
 
 ## Install locally
 
@@ -64,7 +68,7 @@ Keys are stored in this browser profile using `chrome.storage.local`, restricted
 
 Clicking a research button sends the creator's public URL, name and available bio to the provider you selected. No automatic API calls, telemetry, social-media cookies or private messages are sent. Reports are cached locally for seven days, separately per provider. **Clear reports** removes cached reports; **Remove key** removes the selected key.
 
-The only general permission is `storage`. Content scripts run on the four declared social domains; host permissions allow HTTPS requests to the four provider API domains. There is no `tabs`, `activeTab` or `scripting` permission.
+The only general permission is `storage`. Content scripts run on the four declared social domains; host permissions allow HTTPS requests to the four provider API domains. The local mode requests optional access to `http://127.0.0.1/*` only when selected and saved. Browser match patterns cannot restrict ports; the worker itself fixes the companion port to 3210. There is no `tabs`, `activeTab` or `scripting` permission.
 
 Read [PRIVACY.md](PRIVACY.md) for the full data flow and limitations.
 
@@ -79,7 +83,7 @@ npm test
 npm run package
 ```
 
-The package command produces `dist/expertseal-1.4.2.zip` and an unpacked directory. It includes an explicit runtime file list, the MIT license, README and privacy policy; it excludes credentials, tests, node_modules, archives and Git history.
+The package command produces `dist/expertseal-2.0.0.zip` and an unpacked preview directory. It includes an explicit runtime file list, the MIT license, README, local setup guide and privacy policy; it excludes credentials, tests, node_modules, companion runtime and Git history. Install companion dependencies separately from `companion/`; see [local setup](docs/LOCAL-RESEARCH.md).
 
 See [architecture](ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [testing](docs/TESTING.md), and [changes](CHANGELOG.md). The [original context archive](docs/PROJECT_CONTEXT_ARCHIVE.md) and [initial review](docs/PUBLICATION_REVIEW.md) are historical records, not current feature claims.
 

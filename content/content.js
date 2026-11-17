@@ -47,7 +47,10 @@
     if (platform === 'tiktok') displayName = container.querySelector('[data-e2e="user-subtitle"], [data-e2e="user-title"]')?.textContent?.trim() || displayName;
     if (platform === 'x') displayName = Array.from(container.querySelectorAll('span')).find(s => s.textContent.trim() && !s.textContent.trim().startsWith('@'))?.textContent?.trim() || displayName;
     const bio = container.querySelector('[data-testid="UserDescription"], [data-e2e="user-bio"]')?.textContent || '';
-    return { ...identity, displayName: displayName.slice(0, 160), bio: bio.slice(0, 2000) };
+    let topicHint='';
+    if(platform==='x') topicHint=container.closest('article[data-testid="tweet"]')?.querySelector('[data-testid="tweetText"]')?.textContent || '';
+    if(platform==='youtube' && location.pathname==='/watch' && container.matches('ytd-video-owner-renderer')) topicHint=document.querySelector('ytd-watch-metadata h1')?.textContent || '';
+    return { ...identity, displayName: displayName.slice(0, 160), bio: bio.slice(0, 2000), topicHint:topicHint.slice(0,240) };
   }
   function closePanel() { sequence++; panel?.remove(); panel = null; }
   function newPanel() {
@@ -70,7 +73,7 @@
       if (requestId !== sequence || !panel) return;
       if (!response?.success) throw new Error(response?.error || 'No response. Refresh this tab and try again.');
       render(body, response);
-      const refine = el('button','Refine identity / add LinkedIn'); refine.style.cssText='margin:8px 22px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
+      const refine = el('button','Set subject / refine identity'); refine.style.cssText='margin:8px 22px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
       refine.addEventListener('click',async()=>{try {await chrome.runtime.sendMessage({action:'openSettings',creator});} catch {refine.textContent='Open ExpertSeal settings to refine this creator';}});body.append(refine);
       const again = el('button', 'Refresh research'); again.style.cssText = 'margin:0 22px 20px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
       again.addEventListener('click', () => check(creator, true)); body.append(again);
@@ -89,7 +92,7 @@
     const host = el('span'); host.dataset.expertsealBadge = 'true'; host.style.cssText = 'display:inline-flex!important;margin:6px 8px!important;vertical-align:middle!important;';
     const shadow = host.attachShadow({ mode: 'closed' });
     const style = el('style'); style.textContent = ':host{all:initial}button{font:600 12px/1.4 system-ui,sans-serif;border:1px solid #4cb99a;border-radius:20px;padding:6px 11px;background:#102e26;color:#baf9e7;cursor:pointer;white-space:nowrap}button:hover{background:#205440}button:focus-visible{outline:2px solid #fff;outline-offset:3px}';
-    const button = el('button', '🛡 Check credentials'); button.type = 'button'; button.title = 'Research this creator with your selected provider';
+    const button = el('button', 'Check credentials'); button.type = 'button'; button.title = 'Research this creator with your selected provider';
     button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); const creator = getCreator(); if (creator) check(creator); });
     shadow.append(style, button); container.append(host); buttons.set(container, host);
   }

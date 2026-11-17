@@ -1,7 +1,8 @@
 import '../lib/identity.js';
 import { research, CACHE_VERSION, CACHE_TTL } from '../lib/verification.js';
+import { localHealth, localResearch, LOCAL_PERMISSION } from '../lib/local-research.js';
 const { normalizeCreator, platformForHost } = globalThis.ExpertSealIdentity;
-const PROVIDERS = ['tavily', 'gemini', 'openai', 'perplexity'];
+const PROVIDERS = ['tavily', 'gemini', 'openai', 'perplexity', 'local'];
 const KEY_FIELDS = ['apiKey', 'apiKeys', 'geminiApiKey', 'openaiApiKey', 'perplexityApiKey'];
 const inFlight = new Map();
 let settingsQueue = Promise.resolve();
@@ -38,9 +39,9 @@ function isSocialPage(sender) {
   try { return sender.id === chrome.runtime.id && Boolean(sender.tab) && new URL(sender.url).protocol === 'https:' && Boolean(platformForHost(new URL(sender.url).hostname)); }
   catch { return false; }
 }
-function cacheKey(creator, provider) {
+function cacheKey(creator, provider, configId='') {
   const identity = creator.profileUrl.includes('/channel/') ? creator.profileUrl : creator.profileUrl.toLowerCase();
-  return `es_v${CACHE_VERSION}_${provider}_${identity}|${encodeURIComponent(JSON.stringify([creator.displayName,creator.context,creator.linkedinUrl,creator.bio]))}`;
+  return `es_v${CACHE_VERSION}_${provider}_${identity}|${encodeURIComponent(JSON.stringify([creator.displayName,creator.context,creator.linkedinUrl,creator.bio,creator.subject,creator.topicHint,configId]))}`;
 }
 async function verify(input, refresh = false) {
   const creator = normalizeCreator(input);
@@ -48,7 +49,12 @@ async function verify(input, refresh = false) {
   const provider = saved.provider;
   const key = saved.keys[provider];
   if (!key) throw new Error('No API key saved. Open ExpertSeal settings and add your own key.');
-  const id = cacheKey(creator, provider);
+  let configId='';
+  if(provider==='local') {
+    if(!await chrome.permissions.contains(LOCAL_PERMISSION)) throw new Error('Enable local companion access in ExpertSeal settings.');
+    configId=(await localHealth(key)).configId;
+  }
+  const id = cacheKey(creator, provider, configId);
   if (!refresh) {
     const cached = (await chrome.storage.local.get(id))[id];
     const age = Date.now() - cached?.timestamp;
@@ -58,7 +64,7 @@ async function verify(input, refresh = false) {
   if (inFlight.size >= 2) throw new Error('Two creator checks are already running. Wait for one to finish.');
   const epoch = cacheEpoch;
   const task = (async () => {
-    const data = await research(provider, key, creator);
+    const data = provider==='local' ? await localResearch(key,creator,configId) : await research(provider, key, creator);
     const result = { data, creator, provider, timestamp: Date.now(), version: CACHE_VERSION, cached: false };
     const countWrite = settingsQueue.then(async () => {
       if (epoch === cacheEpoch && !data.partial) {
@@ -88,7 +94,7 @@ export async function dispatch(message, sender) {
     if (message.creator) {
       const creator = normalizeCreator(message.creator);
       if (social && creator.platform !== platformForHost(new URL(sender.url).hostname)) throw new Error('Creator platform does not match this page.');
-      const params = new URLSearchParams({view:'full',profile:creator.profileUrl,name:creator.displayName});
+      const params = new URLSearchParams({view:'full',profile:creator.profileUrl,name:creator.displayName,subject:creator.subject,topicHint:creator.topicHint});
       await chrome.tabs.create({url:chrome.runtime.getURL('popup/popup.html')+'?'+params});
     } else await chrome.runtime.openOptionsPage();
     return {};
