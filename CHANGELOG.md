@@ -2,6 +2,7 @@
 
 ## 2.0.0-preview.1 (feature branch, not released)
 
+- Confirmed the matched-identity and expanded-evidence flow from a user-pasted Edge report. Clarified that additional search results are unverified claims, without contradicting an established account link.
 - Added an optional loopback companion using the maintained official MCP SDK, eight tools and an actual stdio client/transport.
 - Added self-hosted SearXNG discovery, public OpenAlex publication/affiliation candidates, optional public ORCID records, and approved-origin source collection.
 - Separated direct account-link identity decisions, structured credential provenance, topic overlap and concise extractive summaries. Names and handles never independently establish identity.
