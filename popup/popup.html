@@ -3,14 +3,14 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ExpertSeal · Creator research</title><link rel="stylesheet" href="popup.css"></head>
 <body>
 <main>
-  <header><div class="brand-icon">🛡</div><div><h1>ExpertSeal <small>1.4.2</small></h1><p>Credentials, with context.</p></div><span id="status" class="status">Loading</span></header>
+  <header><div class="brand-icon" aria-hidden="true">ES</div><div><h1>ExpertSeal <small>2.0 preview</small></h1><p>Credentials, with context.</p></div><span id="status" class="status">Loading</span></header>
   <section class="intro"><span class="eyebrow">YOUR BROWSER. YOUR KEY.</span><h2>Look beyond the blue check.</h2><p>Research a creator’s professional background and inspect the sources yourself.</p></section>
   <section aria-labelledby="setup-heading">
     <div class="section-head"><h2 id="setup-heading">1. Connect your provider</h2><span id="saved-status"></span></div>
     <label for="provider">Research provider</label>
-    <select id="provider"><option value="tavily">Tavily · free source search</option><option value="gemini">Gemini · free tier available</option><option value="openai">OpenAI · paid API, experimental</option><option value="perplexity">Perplexity · paid API, experimental</option></select>
+    <select id="provider"><option value="tavily">Tavily · free source search</option><option value="local">Local open-source research · optional companion</option><option value="gemini">Gemini · free tier available</option><option value="openai">OpenAI · paid API, experimental</option><option value="perplexity">Perplexity · paid API, experimental</option></select>
     <p id="provider-description" class="hint"></p>
-    <div class="section-head"><label for="api-key">API key</label><a id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key ↗</a></div>
+    <div class="section-head"><label id="key-label" for="api-key">API key</label><a id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key ↗</a></div>
     <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key here" maxlength="1024">
     <p class="hint">Saved only in this browser profile, never synced. Keys are not encrypted by ExpertSeal. Leave blank to keep your saved key.</p>
     <div class="actions"><button id="save" class="primary" type="button">Save settings</button><button id="remove-key" type="button">Remove key</button></div>
@@ -21,6 +21,9 @@
     <input id="profile-url" type="url" placeholder="https://www.youtube.com/@creator" autocomplete="off">
     <label for="creator-name">Public name <span class="optional">optional</span></label>
     <input id="creator-name" type="text" placeholder="Helps distinguish people with similar names" maxlength="160" autocomplete="off">
+    <label for="subject">Subject being discussed <span class="optional">optional</span></label>
+    <input id="subject" type="text" maxlength="120" placeholder="e.g. mechanical engineering" autocomplete="off">
+    <p class="hint">Topic fit compares documented fields with this subject. It does not fact-check the advice.</p>
     <details class="identity-hints"><summary>Improve the match · optional identity hints</summary>
       <label for="creator-context">Public field, company or location</label>
       <input id="creator-context" type="text" maxlength="240" placeholder="e.g. physiotherapist, Kathmandu" autocomplete="off">
@@ -31,7 +34,7 @@
     <p class="hint">Only the creator’s public URL, name and available bio are sent to your selected provider when you click. No automatic API calls.</p>
     <button id="verify" class="primary wide" type="button">Research credentials ↗</button>
     <p id="progress" class="hint" role="status" aria-live="polite"></p>
-    <p class="hint">Or use <strong>🛡 Check credentials</strong> beside creators on supported pages. Refresh pages after installing or updating.</p>
+    <p class="hint">Or use <strong>Check credentials</strong> beside creators on supported pages. Refresh pages after installing or updating.</p>
   </section>
   <section id="result" hidden aria-label="Research report"></section>
   <section aria-labelledby="history-heading"><div class="section-head"><h2 id="history-heading">Recent reports</h2><button id="reload-history" type="button">Refresh list</button></div><p class="hint">Stored only in this browser for 7 days, up to 50 reports. Opening one uses no API credits.</p><div id="history" aria-live="polite"></div></section>

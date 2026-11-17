@@ -1,4 +1,24 @@
-# Architecture — 1.4
+# Architecture: 2.0 preview
+
+## Optional local evidence mode
+
+The previous extension pipeline below remains intact. `local` is an additional provider handled by `lib/local-research.js` inside the trusted worker. It uses a fixed loopback endpoint and separately saved pairing token, never a page-provided endpoint. The optional loopback host permission is requested from a settings click. It is not required by existing providers.
+
+The Node companion verifies Host, exact extension Origin, JSON content type, request size and a constant-time bearer comparison. It binds only to 127.0.0.1, allows two concurrent checks and six new checks/minute, sends no logs of creator requests, and exposes only authenticated health/research POST routes. A health handshake before cache access supplies a configuration/startup fingerprint. Topic, post hint, profile context and that fingerprint join the creator/provider cache key; credentials never enter cache keys. History can be reopened offline without a handshake. Changes to the model or source policy require a companion restart and invalidate reuse.
+
+`server.js` uses the official MCP SDK client and stdio transport to spawn `mcp.js`. Eight schema-validated tools run the stages in `research.js`. The browser never spawns a process or speaks raw MCP to an unprotected port. Research sessions are random, bounded, held in memory for at most two minutes and disposed after the orchestrated call. No server-side research database or shared cross-user cache exists.
+
+`network.js` rejects private/reserved DNS results, pins a resolved public address to the socket, rejects every redirect and bounds time/bytes. Only explicitly configured upstream loopback endpoints may access private addresses. Source collection additionally requires an operator-approved exact HTTPS origin, readable robots policy and HTML content type. There is no login automation or PDF/JavaScript execution.
+
+`evidence.js` parses source-scoped Schema.org Person records and authored work. ORCID uses bounded public professional sections. A direct exact social-account link is required for attribution. Name/handle similarity remains a lead; conflicting directly linked names withhold attribution. Institutional status depends on the operator-reviewed source classification. ORCID and LinkedIn remain self-reported. Inconsistent structured career dates are marked conflicting. These rules do not constitute legal identity proof, comprehensive contradiction detection or a license-verification service.
+
+Structured extraction remains deterministic. Attendance is not upgraded to a degree. Original work must name the linked person's identifier as author. Topic relevance is exact field-phrase overlap, not a numerical expertise score or semantic fact-check. Public profile and selected-post hints remain separate from a user-selected subject.
+
+`biography.js` additionally retains bounded, whitespace-normalized complete sentences from main-content paragraphs. Navigation, forms, quoted/testimonial blocks and known instruction/negation/hypothetical patterns are excluded. Only sources with one Person record directly linked to the account qualify. First-person claims require a self-reported About/Bio page; other prose must start with the matched full name. Conservative English patterns identify study, work and authorship statements. Model selection resolves IDs against these exact passages, never arbitrary model claims. Quotes retain source provenance and record paths; institutions, degrees, dates and topic expertise are not inferred from prose. Source bodies/paragraph context stay transient and are excluded from reports. This is constrained quote extraction, not general semantic validation or comprehensive prompt-injection detection.
+
+Ollama/Qwen may return only IDs selecting source-scoped biography quotations and existing evidence statements. Unknown IDs, duplicates, extra fields and incorrect summary ordering are rejected; canonical text/URLs are supplied by deterministic code. Biography selection runs at most once per session, with up to eight candidate passages and six selected quotes. Model failures disclose fallback to rule-selected quotations and deterministic summaries. This intentionally narrower design avoids claiming that an excerpt match proves an arbitrary LLM paraphrase. The primary UI is four statements; source records and unresolved leads live under View evidence.
+
+See [design audit](docs/V2-DESIGN.md), [installation and hosted-mode design](docs/LOCAL-RESEARCH.md) and [testing record](docs/TESTING.md).
 
 ## Runtime
 

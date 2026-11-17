@@ -1,6 +1,18 @@
 # ExpertSeal privacy
 
-ExpertSeal is an open-source browser extension. There is no ExpertSeal server, account, analytics, advertising or telemetry.
+ExpertSeal is an open-source browser extension. There is no centrally operated ExpertSeal server, account, analytics, advertising or telemetry. The optional 2.0 research mode uses a companion service you run yourself.
+
+## Optional local companion
+
+Only an explicit research click sends the selected public creator URL, public name, bio, context/LinkedIn hints, selected subject and bounded selected-post hint to `127.0.0.1:3210`. A health handshake checks service configuration before cache reuse. The pairing token is sent in an Authorization header and stored only in trusted extension local storage, like existing keys. It is never returned to content scripts or included in research exports.
+
+The companion forwards bounded search queries to your configured SearXNG, public author queries to OpenAlex, and, if configured, public-record queries to ORCID. It fetches approved professional source pages subject to robots/access checks. Search engines and source operators can see those requests and the service's IP address. It does not send social-site cookies or credentials, private messages, contact lists, browsing history or full social pages. ORCID requests select professional/name/link sections; they do not request contact/address sections. Retrieved source documents are untrusted, parsed transiently and reduced to professional fields. No analytics or request-content logging is added.
+
+Optional Ollama processing receives up to eight bounded public biography passages (380 characters each), their categories/opaque IDs, and canonical short evidence statements, using a loopback endpoint. It selects supplied passages and cannot add new facts or URLs. Full fetched pages are not sent to the model. Accepted source quotations are included in browser reports and exports, labeled by provenance. Operator API tokens and the pairing secret live in the private companion configuration, not the repository. Protect this file with your OS account permissions; Unix file modes do not guarantee a private Windows ACL.
+
+The companion retains at most eight transient research sessions for two minutes. Full research calls discard their sessions when complete. Reports remain in the extension's existing local cache and optional user exports, not a shared public database. Restarting the service changes its fingerprint, preventing stale cache reuse across configurations. Uninstalling the extension does not delete companion configuration, SearXNG/container data, Ollama model files or exported reports; those are separately managed local software.
+
+The optional browser permission covers HTTP loopback. Its match pattern cannot express port restrictions, but the worker's endpoint is fixed to port 3210. Saving local mode asks for this permission; merely installing or visiting a social page does not grant it or start research. The companion also checks exact Host, extension Origin and bearer authentication. Other installed local software with access to your files is outside this protection boundary. No hosted deployment is enabled in this preview.
 
 ## Data on your device
 

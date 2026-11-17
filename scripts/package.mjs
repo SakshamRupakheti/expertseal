@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
-export const files=['manifest.json','background/service-worker.js','content/content.js','lib/identity.js','lib/verification.js','lib/report.js','popup/popup.html','popup/popup.css','popup/popup.js','icons/icon16.png','icons/icon48.png','icons/icon128.png','LICENSE','README.md','PRIVACY.md'];
+export const files=['manifest.json','background/service-worker.js','content/content.js','lib/identity.js','lib/verification.js','lib/local-research.js','lib/report.js','popup/popup.html','popup/popup.css','popup/popup.js','icons/icon16.png','icons/icon48.png','icons/icon128.png','LICENSE','README.md','PRIVACY.md','docs/LOCAL-RESEARCH.md'];
 // ZIP store format: no runtime dependencies, no secrets/dev dependencies in the package.
 const crcTable=Array.from({length:256},(_,n)=>{let c=n;for(let i=0;i<8;i++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
 function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}

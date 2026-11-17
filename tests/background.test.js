@@ -139,3 +139,28 @@ test('clear waits for an already-started storage write and leaves no reports beh
     assert.equal(Object.keys(local).filter(k=>k.startsWith('es_v')).length,0);
   } finally {unblock();chrome.storage.local.set=previousSet;}
 });
+
+test('optional local mode keeps token private, requires permission and isolates cache by topic and configuration',async()=>{
+  const previousFetch=globalThis.fetch;let requests=0,configId='config-one';
+  chrome.permissions={contains:async()=>false};
+  try {
+    await dispatch({action:'saveSettings',provider:'local',apiKey:'synthetic-local-token-123456789012345'},own);
+    assert.ok(!JSON.stringify(await dispatch({action:'getSettings'},own)).includes('synthetic-local'));
+    await assert.rejects(dispatch({action:'verify',creator},social),/Enable local/);
+    chrome.permissions.contains=async()=>true;
+    globalThis.fetch=async(url,init)=>{
+      assert.equal(init.headers.Authorization,'Bearer synthetic-local-token-123456789012345');
+      const data={mode:'expertise',identity:{state:'unresolved',evidence:[]},topic:{credentialIds:[]},statements:['identity','education','experience','topic'].map(id=>({id,text:'Not confirmed.',urls:[]})),credentials:[],sources:[],leads:[],limitations:[]};
+      if(url.endsWith('/research'))requests++;
+      return new Response(JSON.stringify({protocol:1,configId,data}));
+    };
+    const a={...creator,subject:'biology'};
+    await dispatch({action:'verify',creator:a},own);assert.equal(requests,1);
+    assert.equal((await dispatch({action:'verify',creator:a},own)).cached,true);assert.equal(requests,1);
+    await dispatch({action:'verify',creator:{...a,subject:'physics'}},own);assert.equal(requests,2);
+    configId='config-two';await dispatch({action:'verify',creator:a},own);assert.equal(requests,3);
+    await dispatch({action:'verify',creator:a,refresh:true},own);assert.equal(requests,4);
+    const all=Object.entries(local);for(const [key,value] of all.filter(([key])=>key.startsWith('es_v')))assert.ok(!JSON.stringify({key,value}).includes('synthetic-local'));
+    await dispatch({action:'removeKey',provider:'local'},own);await assert.rejects(dispatch({action:'verify',creator:a},own),/No API key/);assert.equal(requests,4);
+  } finally {globalThis.fetch=previousFetch;delete chrome.permissions;}
+});

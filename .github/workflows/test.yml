@@ -15,6 +15,12 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run package
+      - run: npm ci
+        working-directory: companion
+      - run: npm run check
+        working-directory: companion
+      - run: npm test
+        working-directory: companion
       - uses: actions/upload-artifact@v4
         with:
           name: expertseal-extension

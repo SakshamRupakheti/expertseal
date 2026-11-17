@@ -1,4 +1,33 @@
-# Testing status — 1.4.2
+# Testing status: 2.0 preview
+
+## 2.0 branch validation, November 17, 2026
+
+Baseline commit `403a6e2`: `npm ci`, `npm run check` and all **47 existing tests passed** before implementation. The sandbox initially denied package-network access; the same locked install succeeded with network permission. No dependency audit vulnerabilities were reported.
+
+The extended suite passes **56 extension tests and 33 companion tests**. Existing provider/page tests remain intact. Added tests cover fixed loopback transport, token isolation, optional permission denial, cache separation by subject and companion fingerprint, compact evidence rendering, selected-post scoping, same-name candidates, direct source-account links, conflicting names/dates, self-reported records, education without degree inference, original software work without university credentials, unrelated fields, hostile snippets, model hallucinations/malformed JSON, inaccessible services/sources, public-DNS enforcement, redirects, byte limits and robots restrictions.
+
+Companion tests instantiate the official SDK server/client, list all eight tools, and invoke schema-validated tools. A separate test spawns the real stdio MCP child and makes actual HTTP requests to a synthetic loopback SearXNG fixture. HTTP authorization tests use exact and forged Host/Origin/token combinations. These are real local transport tests with synthetic discovery data, **not live public-web research**. Loopback tests required network permission because the sandbox initially rejected sockets with EACCES.
+
+Live Ollama evaluation: downloaded `qwen3.5:2b` into Ollama 0.40.16. Automatic GPU selection timed out for both full-text and statement-ID output. Explicit CPU inference resolved the connection/inference issue. Of three synthetic CPU cases, unresolved and hostile-input cases produced accepted selections in 6.9 and 5.3 seconds. The matched case took 18.6 seconds and proposed education before identity, so validation rejected its order and used the deterministic fallback. No unsupported facts were accepted. The 4B model was not downloaded or evaluated. Model `none` remains available for immediate deterministic output.
+
+Live local service validation: installed WSL 3.0.5, Ubuntu, Docker and the official SearXNG image (digest `sha256:0b9f3ddd85efc8df189e6543d65702abfa8f3ed1c32229a53f7707cd12b554ef`). Windows received 39 JSON search results with no failed engines. WSL idle shutdown initially stopped the container; the Windows launcher now holds an active WSL process during companion execution. An authenticated HTTP request through the real MCP child completed SearXNG/OpenAlex discovery and CPU Qwen selection for the operator-selected TikTok profile. It returned 23 candidate leads, `possible_match`, zero collected source records, `partial: false`, and `ollama_validated`. This establishes live discovery and transport, **not credential verification**: no origins were approved for collection, and ORCID was not configured.
+
+The user confirmed loading 2.0.0-preview.1, saving local pairing settings, and receiving an unresolved-identity report in Edge. This is a user-reported browser result, not an agent-observed browser trace. A second live research-engine test used an official creator site's structured Person account links and returned `matched`, three source records and accepted CPU Qwen output. Education/experience remained unconfirmed because that site's credentials were prose rather than supported structured fields. The user subsequently pasted the matching Edge report, including three direct account links and the expanded evidence section. This confirms browser-to-companion matched identity as well as the unresolved case; it does not establish credential extraction. The misleading discovery-list label was changed from identity unconfirmed to search results to review, keeping account linkage separate from unverified claims. Live institutional credential attribution and optional ORCID remain unvalidated. No public service, release or merge was performed. No actual creator records, tokens or screenshots were committed as fixtures.
+
+## Remaining acceptance work
+
+Context-recovery update: all 22 UI tests and runtime checks pass, including new cases for synchronous/asynchronous invalidation and stale settings. Social tabs show a page-reload action instead of retrying a disconnected runtime. A Professor Leonard tab triggered the user report. After refreshing, the user received a completed unresolved-identity report, confirming recovery from the stale connection. GitHub Actions passed the fix. This does not verify that creator's credentials: the inspected instructor biography exceeded the current source-fetch size limit.
+
+Biography update, November 17: seven new companion tests and one UI/export test cover exact quotations, provenance, same-name/multiple-person rejection, negation, hypothetical/injected text, testimonial exclusion, strict model selection, single execution per session, fallback and schema-valid full reports. The entire suite passed (54 extension / 33 companion). A live engine check against the approved official biography returned a matched account and three self-reported prose claims (one education, two work-history passages) in 47 seconds. Local Qwen selected source passages successfully; final summary ordering was rejected and safely used deterministic fallback. No independently verified degree or employment status was asserted. The restarted authenticated HTTP/MCP service also returned three biography quotes. The user then confirmed the self-reported education statement and quoted work-history passages appeared in Edge. GitHub Actions passed commit 040cb25. This establishes the new local biography flow end to end on this machine; institutional prose tests remain synthetic.
+
+1. Approve source origins after checking their terms/provenance; local Windows/WSL search setup and JSON discovery now work.
+2. Browser pairing and matched identity with expanded evidence are confirmed by the user's pasted Edge report. Broader browser/site flows remain below.
+3. Validate live institutional credential attribution. Scoped direct social links now match in a live engine test, while ambiguous names stay unresolved. Most sites lack supported structured metadata, so insufficient evidence is expected rather than inferred qualifications.
+4. Test optional live ORCID access and broader OpenAlex quota/error behavior. Do not infer success from synthetic API fixtures.
+5. Evaluate Qwen quality/latency on more hardware. CPU inference works here, but validated fallback remains necessary; automatic GPU selection failed here.
+6. Retest all changed UI/manual flows on live YouTube, TikTok and X. The 1.4.2 live results below are historical evidence, not proof of 2.0 behavior.
+
+## Historical 1.4.2 validation
 
 ## Current validation (November 16, 2026)
 
