@@ -9,7 +9,7 @@ Baseline: 1.4.2, commit 403a6e2. Existing worker, provider adapters, cache seria
 - MCP research server -> operator-configured SearXNG/Ollama, OpenAlex/ORCID public interfaces and approved public source origins. Retrieved text never controls tools, endpoints, permissions or identity decisions.
 - Public HTML collection is limited to explicitly configured exact origins with a declared provenance class. Robots restrictions, private IP rejection, DNS pinning, redirect rejection, timeouts and response limits apply. No search snippet is promoted to a credential.
 - A source-scoped Person record explicitly linking the exact social account can establish a documented identity connection. Matching names, handles, locations, search rankings and user-supplied links cannot. Conflicting directly linked records suppress attribution.
-- Structured professional facts are deterministic. Qwen proposes short extractive selections only. Unknown IDs, rewritten claims and unsupported URLs are rejected. Unstructured prose remains a lead; the implementation deliberately does not infer degrees from university attendance.
+- Structured professional facts are deterministic. Qwen proposes short extractive selections only. Unknown IDs, rewritten claims and unsupported URLs are rejected. Subject-scoped biography sentences may be shown as exact provenance-labeled claims; other prose remains a lead. The implementation deliberately does not infer degrees from university attendance or quotations.
 
 ## Smallest reliable scope
 

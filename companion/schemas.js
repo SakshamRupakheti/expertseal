@@ -4,6 +4,7 @@ export const lead=z.object({url,title:text,excerpt:z.string().max(500),sourceTyp
 const identityLink=z.object({sourceUrl:url,recordId:text,relation:z.literal('record_links_exact_account'),account:url,recordPath:text,sourceType:text}).strict();
 export const identity=z.object({state:z.enum(['matched','possible_match','unresolved','conflicting_evidence']),recordIds:z.array(text).max(100),evidence:z.array(identityLink).max(100),explanation:text}).strict();
 export const credential=z.object({id:text,type:z.enum(['education','experience','publication']),title:text,institution:text,field:text,start:text,end:text,originalWork:z.boolean().optional(),
+  evidenceKind:z.literal('biography_quote').optional(),quote:z.string().min(20).max(380).optional(),
   url,sourceType:z.enum(['institutional','self_reported','original_work']),recordId:text,recordPath:text,identityEvidence:z.array(identityLink).max(100),
   status:z.enum(['institutionally_supported','source_supported','self_reported','unverified_lead','conflicting'])}).strict();
 export const topic=z.object({state:z.enum(['documented_overlap','insufficient_evidence']),credentialIds:z.array(text).max(80),explanation:text,subject:text,hint:text,origin:z.enum(['user_supplied','unselected'])}).strict();

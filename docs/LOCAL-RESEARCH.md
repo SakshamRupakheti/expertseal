@@ -42,7 +42,7 @@ ollama pull qwen3.5:2b
 
 This model was downloaded and CPU inference was tested on the development machine. Automatic GPU selection timed out, so the default `ollamaDevice` is `cpu`. Two of three synthetic cases returned accepted statement selections; one proposed the wrong order and safely fell back to deterministic output. A subsequent live discovery report also used an accepted selection. Use `"model": "none"` for faster deterministic output without inference. `qwen3.5:4b` is optional, never an automatic fallback, and has not been evaluated here.
 
-The model uses [structured output](https://docs.ollama.com/capabilities/structured-outputs) to select canonical statement IDs. The service supplies the evidence text and URLs. It never accepts new model-written qualifications or citations. This is deliberately constrained extractive summarization, not unrestricted model extraction or factual verification.
+The model uses [structured output](https://docs.ollama.com/capabilities/structured-outputs) to select source-scoped biography passages and canonical statement IDs. The service supplies the exact passage text and URLs. It never accepts new model-written qualifications or citations. This is deliberately constrained extractive summarization, not unrestricted model extraction or factual verification. Model errors fall back to rule-selected quotations with a visible limitation.
 
 ## 3. Pair the companion
 
@@ -101,7 +101,11 @@ Click **Check credentials** on a supported profile or use the manual URL field. 
 
 The main report contains identity, education, experience and topic fit. **View evidence** exposes qualifications, authored work, direct identity links, candidate sources and limitations. A `matched` identity means a public Person/ORCID record explicitly links the account, not proof of legal identity. A possible match never attributes credentials. LinkedIn excerpts stay self-reported leads.
 
-Structured Schema.org Person fields and selected public ORCID sections are supported. University attendance is labeled affiliation, not a degree. Authored work requires an explicit author identifier tied to a linked Person record. Free-form CV prose is not automatically converted into credentials. This conservative coverage will often yield insufficient evidence, especially for small creators.
+Structured Schema.org Person fields and selected public ORCID sections are supported. University attendance is labeled affiliation, not a degree. Structured authored work requires an explicit author identifier tied to a linked Person record.
+
+Biography extraction also supports complete English sentences about study, work and authored publications. It requires one directly linked Person record on the fetched page and a main-content region. First-person statements are accepted only on self-reported About/Bio pages; other statements must explicitly begin with that person's full name. Quoted, testimonial, negative, hypothetical and known instruction-like text is excluded conservatively. The report shows the actual passage and source. A personal biography remains self-reported, even when the account link is matched. No degree, employer field, dates or topical expertise are inferred from a quote. Unrecognized wording, pronouns, other languages and unsupported layouts remain unextracted. This is not a general CV parser or independent credential verification.
+
+After updating the companion, restart it and run a fresh check. Its new startup fingerprint prevents reuse of older reports. Reopen settings to load the new quotation renderer; reload social tabs for on-page rendering.
 
 ## MCP tools and client
 

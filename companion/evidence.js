@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
 import { createHash } from 'node:crypto';
 import '../lib/identity.js';
+import {biographyPassages} from './biography.js';
 const { parseProfileUrl } = globalThis.ExpertSealIdentity;
 export const clean = (v, max = 160) => typeof v === 'string' ? v.replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,max) : '';
 const array = v => (Array.isArray(v) ? v : v == null ? [] : [v]).slice(0,30);
@@ -49,7 +50,7 @@ export function parseSource({url,html,sourceType,retrievedAt}) {
     const authored=person.nodeId && array(work.author).some(a=>typeof a?.['@id']==='string' && identifier(a['@id'])===person.nodeId);
     if(authored && name(work) && person.facts.length<20) person.facts.push({type:array(work['@type']).includes('SoftwareSourceCode') ? 'experience' : 'publication',originalWork:true,title:name(work),institution:name(work.publisher),field:name(work.about) || name(work.programmingLanguage),start:date(work.datePublished),end:''});
   }
-  return {url,title:clean($('title').text()) || new URL(url).hostname,sourceType,retrievedAt,people};
+  return {url,title:clean($('title').text()) || new URL(url).hostname,sourceType,retrievedAt,people,passages:biographyPassages(html)};
 }
 export function resolveIdentity(creator, sources, leads=[]) {
   const matches = sources.flatMap(s=>s.people || []).filter(p=>p.links.some(link=>exactAccount(link,creator.profileUrl)));
@@ -92,6 +93,11 @@ export function summaryOptions(identity, credentials, topic) {
     const supported=credentials.find(c=>c.type===kind && ['institutionally_supported','source_supported'].includes(c.status));
     const self=credentials.find(c=>c.type===kind && c.status==='self_reported');
     const c=supported || self;
+    if(c?.evidenceKind==='biography_quote') {
+      const attribution=supported ? 'Institutional source' : 'Self-reported';
+      push(kind,c.quote.length<=110 ? `${label}: ${attribution}: “${c.quote}”` : `${label}: ${attribution} ${kind==='education' ? 'study' : 'work'} history. See quoted passage.`,[c.url]);
+      continue;
+    }
     push(kind,c ? `${label}: ${c.title.slice(0,65)}${c.institution ? ', '+c.institution.slice(0,45) : ''}. ${supported ? c.status==='source_supported' ? 'Original work.' : 'Institutional record.' : 'Self-reported.'}` : `${label}: Not independently confirmed.`,c ? [c.url] : []);
   }
   push('topic','Topic fit: '+topic.explanation,credentials.filter(c=>topic.credentialIds.includes(c.id)).map(c=>c.url));

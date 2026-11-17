@@ -40,7 +40,7 @@
     $('result').hidden=false;
     const root=$('result').shadowRoot || $('result').attachShadow({mode:'open'});
     globalThis.ExpertSealReport.render(root,response);
-    $('progress').textContent=response.cached ? 'Opened a saved report. No API credits used.' : response.data?.partial ? 'Some searches failed. Review section errors; this partial report was not cached.' : 'Research complete. Review the sources and identity matches.';
+    $('progress').textContent=response.cached ? 'Opened a saved report. No API credits used.' : response.data?.partial ? 'Some research steps were unavailable or used fallback. Review the limitations; this partial report was not cached.' : 'Research complete. Review the sources and identity matches.';
   }
   async function history() {
     const res=await send({action:'getHistory'});$('history').replaceChildren();

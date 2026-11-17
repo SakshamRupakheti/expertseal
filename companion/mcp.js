@@ -19,7 +19,7 @@ export function createResearchServer(config, dependencies) {
   register('academic_record_discovery','Discover OpenAlex, ORCID and education leads for this session.',session,({researchId})=>engine.academic(researchId));
   register('professional_experience_discovery','Discover employer and professional leads, without attributing name matches.',session,({researchId})=>engine.professional(researchId));
   register('identity_matching','Fetch approved sources and require a source-scoped direct account link.',session,({researchId})=>engine.match(researchId));
-  register('credential_extraction','Extract structured facts and retain provenance, identity evidence and uncertainty.',session,({researchId})=>engine.extract(researchId));
+  register('credential_extraction','Extract structured facts and scoped biography quotations with provenance and identity evidence.',session,({researchId})=>engine.extract(researchId));
   register('topic_relevance','Evaluate conservative documented field overlap with the explicitly supplied subject.',session,({researchId})=>engine.relevance(researchId));
   register('evidence_summary','Return four validated extractive statements; deterministic fallback on model failure.',session,({researchId})=>engine.summarize(researchId));
   register('research_creator','Run the complete evidence pipeline. No paid fallback or popularity input.',requestSchema,({creator})=>engine.research(creator));

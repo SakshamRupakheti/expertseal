@@ -158,6 +158,17 @@ test('selected post hint comes only from the clicked X author article',()=>{
   win.eval(read('content/content.js'));roots.get(win.document.querySelector('[data-expertseal-badge]')).querySelector('button').click();
   assert.equal(messages[0].creator.topicHint,'Mechanical engineering');win.happyDOM.abort();
 });
+
+test('biography quotations render as text with provenance and survive report export',()=>{
+  const {win}=windowAt('https://example.test','<div id="report"></div>');
+  const claim={type:'education',title:'Study history',institution:'',status:'self_reported',evidenceKind:'biography_quote',quote:'I studied engineering at Northbank University. <img src=x onerror=alert(1)>',url:'https://college.example/about/'};
+  const result={creator:{username:'@avery_fixture',profileUrl:'https://x.com/avery_fixture'},provider:'local',timestamp:Date.now(),data:{mode:'expertise',identity:{state:'matched',explanation:'Direct account link.',evidence:[]},topic:{subject:'engineering'},statements:[],credentials:[claim,{...claim,status:'unverified_lead',quote:'Unattributed candidate passage'}],sources:[],leads:[],limitations:[],summaryMode:'deterministic'}};
+  win.ExpertSealReport.render(win.document.getElementById('report'),result);
+  assert.equal(win.document.querySelector('blockquote').textContent,claim.quote);assert.equal(win.document.querySelectorAll('img,script').length,0);
+  assert.match(win.document.body.textContent,/Self-reported/);
+  const output=win.ExpertSealReport.exportText(result);assert.match(output,/Source passage: I studied engineering/);assert.ok(!output.includes('Unattributed candidate passage'));
+  win.happyDOM.abort();
+});
 test('local permission refusal does not save settings or transmit the token',async()=>{
   const {win,messages}=windowAt('chrome-extension://expertseal-test/popup/popup.html',read('popup/popup.html'));
   win.chrome.permissions={request:async()=>false};

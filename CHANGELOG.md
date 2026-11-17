@@ -2,6 +2,7 @@
 
 ## 2.0.0-preview.1 (feature branch, not released)
 
+- Added bounded biography quotation extraction after direct identity matching. Local Qwen selects exact source passages; invented IDs/rewrites are rejected. Self-reported study/work/publication claims retain provenance and appear in expanded evidence and exports. Quotes do not establish degrees, current employment or topic expertise.
 - Confirmed the matched-identity and expanded-evidence flow from a user-pasted Edge report. Clarified that additional search results are unverified claims, without contradicting an established account link.
 - Added an optional loopback companion using the maintained official MCP SDK, eight tools and an actual stdio client/transport.
 - Added self-hosted SearXNG discovery, public OpenAlex publication/affiliation candidates, optional public ORCID records, and approved-origin source collection.
@@ -9,7 +10,7 @@
 - Added four-statement reports with expandable evidence, optional subject input, scoped post hints, token isolation and configuration-aware caching.
 - Added bounded authenticated localhost requests, exact origin/Host checks, public DNS pinning, redirect rejection and robots-aware source fetching.
 - Evaluated local Qwen 3.5 2B: automatic GPU selection timed out; CPU inference worked with validated fallback for rejected output. Live SearXNG/OpenAlex discovery completed through HTTP/MCP, a real structured source linked a creator account, and the user reported an unresolved report in Edge. Live institutional credential attribution remains pending.
-- Preserved all 47 prior tests; now 53 extension and 26 companion tests. See `docs/TESTING.md` for actual observations and limitations.
+- Preserved all 47 prior tests; now 54 extension and 33 companion tests. See `docs/TESTING.md` for actual observations and limitations.
 
 ## 1.4.2 — TikTok hydration and live validation (2026-11-16)
 
