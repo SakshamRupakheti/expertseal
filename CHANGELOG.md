@@ -11,7 +11,7 @@
 - Added four-statement reports with expandable evidence, optional subject input, scoped post hints, token isolation and configuration-aware caching.
 - Added bounded authenticated localhost requests, exact origin/Host checks, public DNS pinning, redirect rejection and robots-aware source fetching.
 - Evaluated local Qwen 3.5 2B: automatic GPU selection timed out; CPU inference worked with validated fallback for rejected output. Live SearXNG/OpenAlex discovery completed through HTTP/MCP, a real structured source linked a creator account, and the user reported an unresolved report in Edge. Live institutional credential attribution remains pending.
-- Preserved all 47 prior tests; now 54 extension and 33 companion tests. See `docs/TESTING.md` for actual observations and limitations.
+- Preserved all 47 prior tests; now 56 extension and 33 companion tests. See `docs/TESTING.md` for actual observations and limitations.
 
 ## 1.4.2 — TikTok hydration and live validation (2026-11-16)
 
