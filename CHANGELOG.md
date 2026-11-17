@@ -2,6 +2,7 @@
 
 ## 2.0.0-preview.1 (feature branch, not released)
 
+- Replaced raw extension-context-invalidated errors with page-reload recovery in social tabs and reopen guidance in settings. Disconnected tabs no longer offer retry/settings actions through an invalid runtime.
 - Added bounded biography quotation extraction after direct identity matching. Local Qwen selects exact source passages; invented IDs/rewrites are rejected. Self-reported study/work/publication claims retain provenance and appear in expanded evidence and exports. Quotes do not establish degrees, current employment or topic expertise.
 - Confirmed the matched-identity and expanded-evidence flow from a user-pasted Edge report. Clarified that additional search results are unverified claims, without contradicting an established account link.
 - Added an optional loopback companion using the maintained official MCP SDK, eight tools and an actual stdio client/transport.

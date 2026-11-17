@@ -16,6 +16,8 @@ The user confirmed loading 2.0.0-preview.1, saving local pairing settings, and r
 
 ## Remaining acceptance work
 
+Context-recovery update: all 22 UI tests and runtime checks pass, including new cases for synchronous/asynchronous invalidation and stale settings. Social tabs show a page-reload action instead of retrying a disconnected runtime. A Professor Leonard tab triggered the user report; refreshing that tab is still needed to replace the already-invalid script. This verifies error handling in fixtures, not that creator's credentials.
+
 Biography update, November 17: seven new companion tests and one UI/export test cover exact quotations, provenance, same-name/multiple-person rejection, negation, hypothetical/injected text, testimonial exclusion, strict model selection, single execution per session, fallback and schema-valid full reports. The entire suite passed (54 extension / 33 companion). A live engine check against the approved official biography returned a matched account and three self-reported prose claims (one education, two work-history passages) in 47 seconds. Local Qwen selected source passages successfully; final summary ordering was rejected and safely used deterministic fallback. No independently verified degree or employment status was asserted. The restarted authenticated HTTP/MCP service also returned three biography quotes. The user then confirmed the self-reported education statement and quoted work-history passages appeared in Edge. GitHub Actions passed commit 040cb25. This establishes the new local biography flow end to end on this machine; institutional prose tests remain synthetic.
 
 1. Approve source origins after checking their terms/provenance; local Windows/WSL search setup and JSON discovery now work.

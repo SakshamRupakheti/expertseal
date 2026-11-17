@@ -76,6 +76,29 @@ test('late research responses do not reopen a dismissed report after navigation'
   assert.equal(win.document.querySelector('[data-expertseal-panel]'),null);win.happyDOM.abort();
 });
 
+test('invalidated content scripts offer page reload instead of broken retry/settings actions',async()=>{
+  for(const asynchronous of [false,true]) {
+    const {win,roots}=windowAt('https://www.youtube.com/@fixture','<ytd-page-header-renderer><h1>Fixture Educator</h1></ytd-page-header-renderer>');
+    const fail=()=>{throw new Error('Extension context invalidated.');};
+    win.chrome.runtime.sendMessage=asynchronous ? async()=>fail() : fail;
+    win.eval(read('content/content.js'));roots.get(win.document.querySelector('[data-expertseal-badge]')).querySelector('button').click();await delay(10);
+    const panel=roots.get(win.document.querySelector('[data-expertseal-panel]'));
+    assert.match(panel.textContent,/Refresh this tab to reconnect ExpertSeal/);
+    assert.ok([...panel.querySelectorAll('button')].some(b=>b.textContent==='Reload this page'));
+    assert.ok(!panel.textContent.includes('Try again'));assert.ok(!panel.textContent.includes('Open settings'));
+    win.happyDOM.abort();
+  }
+});
+
+test('invalidated settings explain reopening instead of exposing the raw runtime error',async()=>{
+  const {win}=windowAt('chrome-extension://expertseal-test/popup/popup.html',read('popup/popup.html'));
+  win.chrome.runtime.sendMessage=async()=>{throw new Error('Extension context invalidated.');};
+  win.eval(read('popup/popup.js'));await delay(10);
+  assert.match(win.document.getElementById('notice').textContent,/Close this settings page and reopen ExpertSeal/);
+  assert.ok(!win.document.getElementById('notice').textContent.includes('context invalidated'));
+  win.happyDOM.abort();
+});
+
 test('background report groups evidence and collapses unmatched people and excerpts',()=>{
   const {win}=windowAt('https://example.test','<div id="report"></div>');
   win.ExpertSealReport.render(win.document.getElementById('report'),{creator:{username:'@lalitcrock7203',profileUrl:'https://youtube.com/@lalitcrock7203'},provider:'tavily',timestamp:Date.now(),cached:false,data:{mode:'dossier',name:'Unscripted by Lalit',status:'inconclusive',summary:'Background research',credentials:[],sources:[],limitations:[],sections:[

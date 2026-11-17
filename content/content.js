@@ -53,6 +53,13 @@
     return { ...identity, displayName: displayName.slice(0, 160), bio: bio.slice(0, 2000), topicHint:topicHint.slice(0,240) };
   }
   function closePanel() { sequence++; panel?.remove(); panel = null; }
+  const invalidated = error => /extension context invalidated/i.test(error?.message || String(error));
+  function showReload(body) {
+    const state=el('div','','state');
+    state.append(el('h2','Refresh this tab to reconnect ExpertSeal'),el('p','ExpertSeal was updated or reloaded. This tab still has its old connection. Reload the page, then click Check credentials again. Your saved settings are unchanged.'));
+    const reload=el('button','Reload this page');reload.type='button';reload.addEventListener('click',()=>location.reload());
+    state.append(reload);body.replaceChildren(state);
+  }
   function newPanel() {
     panel?.remove();
     const host = el('div'); host.dataset.expertsealPanel = 'true';
@@ -74,15 +81,16 @@
       if (!response?.success) throw new Error(response?.error || 'No response. Refresh this tab and try again.');
       render(body, response);
       const refine = el('button','Set subject / refine identity'); refine.style.cssText='margin:8px 22px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
-      refine.addEventListener('click',async()=>{try {await chrome.runtime.sendMessage({action:'openSettings',creator});} catch {refine.textContent='Open ExpertSeal settings to refine this creator';}});body.append(refine);
+      refine.addEventListener('click',async()=>{try {await chrome.runtime.sendMessage({action:'openSettings',creator});} catch(error) {if(invalidated(error))showReload(body);else refine.textContent='Open ExpertSeal settings to refine this creator';}});body.append(refine);
       const again = el('button', 'Refresh research'); again.style.cssText = 'margin:0 22px 20px;padding:10px;border:1px solid #69ddbf;border-radius:8px;background:#183c34;color:#baf9e7;cursor:pointer';
       again.addEventListener('click', () => check(creator, true)); body.append(again);
     } catch (error) {
       if (requestId !== sequence || !panel) return;
+      if(invalidated(error)) {showReload(body);return;}
       state.replaceChildren(el('h2', 'Could not complete research'), el('p', error.message));
       const settings = el('button', 'Open settings'); settings.addEventListener('click', async () => {
         try { await chrome.runtime.sendMessage({ action: 'openSettings' }); }
-        catch { state.append(el('p', 'Open ExpertSeal from the browser Extensions menu.')); }
+        catch(error) {if(invalidated(error))showReload(body);else state.append(el('p', 'Open ExpertSeal from the browser Extensions menu.'));}
       });
       const retry = el('button', 'Try again'); retry.addEventListener('click', () => check(creator)); state.append(settings, retry);
     }

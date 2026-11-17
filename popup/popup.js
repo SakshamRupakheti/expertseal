@@ -14,7 +14,12 @@
   $('creator-name').value=(params.get('name') || '').slice(0,160);
   $('subject').value=(params.get('subject') || '').slice(0,120);
   async function send(message) {
-    const response = await chrome.runtime.sendMessage(message);
+    let response;
+    try {response = await chrome.runtime.sendMessage(message);}
+    catch(error) {
+      if(/extension context invalidated/i.test(error?.message || String(error))) throw new Error('ExpertSeal was updated or reloaded. Close this settings page and reopen ExpertSeal from the Extensions menu. Refresh any social tabs before checking a creator again. Your saved settings are unchanged.');
+      throw error;
+    }
     if (!response?.success) {
       if (response?.error === 'Invalid provider.' || response?.error === 'Unknown extension action.') throw new Error('ExpertSeal needs a full reload. Close this page, open edge://extensions (or chrome://extensions), click Reload on ExpertSeal, then reopen settings. Your saved keys stay in this browser.');
       throw new Error(response?.error || 'Extension unavailable. Reload it and try again.');
